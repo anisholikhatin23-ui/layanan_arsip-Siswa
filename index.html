@@ -737,19 +737,117 @@ let _uid = 1000;
 const uid = () => ++_uid;
 
 let siswa = [
-  ['Rani Kusuma', '0051234567', 'VII A'],
-  ['Bagas Saputra', '0061122334', 'VII A'],
-  ['Dewi Anggraini', '0062233445', 'VII A'],
-  ['Fajar Ramadhan', '0063344556', 'VII B'],
-  ['Putri Amelia', '0064455667', 'VII B'],
-  ['Nurul Hidayah', '0052345678', 'VIII A'],
-  ['Rizky Firmansyah', '0053456789', 'VIII A'],
-  ['Salsabila Putri', '0054567890', 'VIII A'],
-  ['Siti Marlina', '0049876543', 'VIII B'],
-  ['Dedi Firmansyah', '0048765432', 'VIII B'],
-  ['Andi Pratama', '0051112233', 'IX A'],
-  ['Maya Lestari', '0042233445', 'IX A'],
-  ['Yoga Prasetyo', '0043344556', 'IX A'],
+  // KELAS VII A (17 Siswa)
+  ['Ahmad Fauzi', '0071234001', 'VII A'],
+  ['Rani Kusuma', '0071234002', 'VII A'],
+  ['Bagas Saputra', '0071234003', 'VII A'],
+  ['Dewi Anggraini', '0071234004', 'VII A'],
+  ['Aditia Pratama', '0071234005', 'VII A'],
+  ['Annisa Rahmadani', '0071234006', 'VII A'],
+  ['Bayu Setiawan', '0071234007', 'VII A'],
+  ['Citra Lestari', '0071234008', 'VII A'],
+  ['Dimas Kurniawan', '0071234009', 'VII A'],
+  ['Eka Putri', '0071234010', 'VII A'],
+  ['Farhan Ramadhan', '0071234011', 'VII A'],
+  ['Gita Nurhaliza', '0071234012', 'VII A'],
+  ['Hadi Wijaya', '0071234013', 'VII A'],
+  ['Indah Permata', '0071234014', 'VII A'],
+  ['Joko Susilo', '0071234015', 'VII A'],
+  ['Kartika Sari', '0071234016', 'VII A'],
+  ['Luqman Hakim', '0071234017', 'VII A'],
+
+  // KELAS VII B (17 Siswa)
+  ['Fajar Ramadhan', '0071234018', 'VII B'],
+  ['Putri Amelia', '0071234019', 'VII B'],
+  ['M. Rizky Febrian', '0071234020', 'VII B'],
+  ['Nabila Syifa', '0071234021', 'VII B'],
+  ['Octavia Maharani', '0071234022', 'VII B'],
+  ['Panji Kusuma', '0071234023', 'VII B'],
+  ['Qonita Azizah', '0071234024', 'VII B'],
+  ['Raditya Putra', '0071234025', 'VII B'],
+  ['Sinta Bella', '0071234026', 'VII B'],
+  ['Taufik Hidayat', '0071234027', 'VII B'],
+  ['Ulfa Nuraini', '0071234028', 'VII B'],
+  ['Vina Panduwinata', '0071234029', 'VII B'],
+  ['Wahyu Nugroho', '0071234030', 'VII B'],
+  ['Xena Amelia', '0071234031', 'VII B'],
+  ['Yusuf Mansur', '0071234032', 'VII B'],
+  ['Zahra Aulia', '0071234033', 'VII B'],
+  ['Aldo Fernando', '0071234034', 'VII B'],
+
+  // KELAS VIII A (17 Siswa)
+  ['Nurul Hidayah', '0061234035', 'VIII A'],
+  ['Rizky Firmansyah', '0061234036', 'VIII A'],
+  ['Salsabila Putri', '0061234037', 'VIII A'],
+  ['Bella Safitri', '0061234038', 'VIII A'],
+  ['Candra Gunawan', '0061234039', 'VIII A'],
+  ['Dian Sastrowardoyo', '0061234040', 'VIII A'],
+  ['Erika Carlina', '0061234041', 'VIII A'],
+  ['Faisal Amir', '0061234042', 'VIII A'],
+  ['Grace Melia', '0061234043', 'VIII A'],
+  ['Hafiz Maulana', '0061234044', 'VIII A'],
+  ['Intan Suwandi', '0061234045', 'VIII A'],
+  ['Julian Syahputra', '0061234046', 'VIII A'],
+  ['Kiki Amalia', '0061234047', 'VIII A'],
+  ['Leo Rolly', '0061234048', 'VIII A'],
+  ['Mitha Lestari', '0061234049', 'VIII A'],
+  ['Naufal Azhar', '0061234050', 'VIII A'],
+  ['Olive Rahma', '0061234051', 'VIII A'],
+
+  // KELAS VIII B (17 Siswa)
+  ['Siti Marlina', '0061234052', 'VIII B'],
+  ['Dedi Firmansyah', '0061234053', 'VIII B'],
+  ['Budiman Santoso', '0061234054', 'VIII B'],
+  ['Permata Sari', '0061234055', 'VIII B'],
+  ['Qori Supriatna', '0061234056', 'VIII B'],
+  ['Rahmat Hidayat', '0061234057', 'VIII B'],
+  ['Surya Pratama', '0061234058', 'VIII B'],
+  ['Tari Wulandari', '0061234059', 'VIII B'],
+  ['Utami Dewi', '0061234060', 'VIII B'],
+  ['Vicky Prasetyo', '0061234061', 'VIII B'],
+  ['Widya Astuti', '0061234062', 'VIII B'],
+  ['Yahya Muhaimin', '0061234063', 'VIII B'],
+  ['Zikri Ahmad', '0061234064', 'VIII B'],
+  ['Anisa Tri Astuti', '0061234065', 'VIII B'],
+  ['Bambang Pamungkas', '0061234066', 'VIII B'],
+  ['Chintya Laura', '0061234067', 'VIII B'],
+  ['Doni Tata', '0061234068', 'VIII B'],
+
+  // KELAS IX A (16 Siswa)
+  ['Andi Pratama', '0051234069', 'IX A'],
+  ['Maya Lestari', '0051234070', 'IX A'],
+  ['Yoga Prasetyo', '0051234071', 'IX A'],
+  ['Elvira Devinamira', '0051234072', 'IX A'],
+  ['Febri Hariyadi', '0051234073', 'IX A'],
+  ['Gilang Dirga', '0051234074', 'IX A'],
+  ['Hesti Purwadinata', '0051234075', 'IX A'],
+  ['Irfan Bachdim', '0051234076', 'IX A'],
+  ['Julia Perez', '0051234077', 'IX A'],
+  ['Kevin Sanjaya', '0051234078', 'IX A'],
+  ['Larasati Putri', '0051234079', 'IX A'],
+  ['M. Ahsan', '0051234080', 'IX A'],
+  ['Nadya Hutagalung', '0051234081', 'IX A'],
+  ['Oscar Lawalata', '0051234082', 'IX A'],
+  ['Prilly Latuconsina', '0051234083', 'IX A'],
+  ['Raffi Ahmad', '0051234084', 'IX A'],
+
+  // KELAS IX B (16 Siswa)
+  ['Budi Santoso', '0051234085', 'IX B'],
+  ['Sheila Dara', '0051234086', 'IX B'],
+  ['Titi Kamal', '0051234087', 'IX B'],
+  ['Uus Wijaya', '0051234088', 'IX B'],
+  ['Vino G. Bastian', '0051234089', 'IX B'],
+  ['Wika Salim', '0051234090', 'IX B'],
+  ['Yura Yunita', '0051234091', 'IX B'],
+  ['Zaskia Gotik', '0051234092', 'IX B'],
+  ['Ardit Erwandha', '0051234093', 'IX B'],
+  ['Bintang Emon', '0051234094', 'IX B'],
+  ['Cakra Khan', '0051234095', 'IX B'],
+  ['Denny Cagur', '0051234096', 'IX B'],
+  ['Enzy Storia', '0051234097', 'IX B'],
+  ['Fiersa Besari', '0051234098', 'IX B'],
+  ['Gading Marten', '0051234099', 'IX B'],
+  ['Hito Caesar', '0051234100', 'IX B'],
 ].map((r, i) => ({ id: i + 1, nama: r[0], nisn: r[1], kelas: r[2] }));
 
 let documents = [];
@@ -758,29 +856,45 @@ function seedDoc(siswaId, kategori, judul, tahun, jenis, status) {
 }
 // [siswaId, kategori, judul, tahun, jenis, status]
 [
-  [11,'Ijazah','','2024','Fisik + Digital','ok'], [11,'Akta Kelahiran','','2024','Fisik + Digital','ok'],
-  [11,'Kartu Keluarga','','2024','Fisik + Digital','ok'], [11,'Rapor','Rapor Semester 1','2025','Digital','ok'],
-  [11,'Lainnya','Sertifikat Juara Olimpiade','2025','Digital','ok'],
-  [12,'Ijazah','','2024','Fisik + Digital','ok'], [12,'Akta Kelahiran','','2024','Fisik','ok'],
-  [12,'Kartu Keluarga','','2024','Digital','ok'], [12,'Rapor','Rapor Semester 1','2025','Digital','warn'],
-  [13,'Ijazah','','2024','Fisik + Digital','ok'], [13,'Kartu Keluarga','','2024','Fisik','warn'],
-  [9,'Ijazah','','2023','Fisik + Digital','ok'], [9,'Akta Kelahiran','','2023','Fisik','ok'],
-  [9,'Kartu Keluarga','','2023','Digital','ok'], [9,'Rapor','Rapor Semester 1','2025','Digital','warn'],
-  [10,'Ijazah','','2023','Fisik','ok'], [10,'Akta Kelahiran','','2023','Fisik','ok'],
-  [6,'Ijazah','','2023','Digital','ok'], [6,'Akta Kelahiran','','2023','Digital','ok'],
-  [6,'Kartu Keluarga','','2023','Digital','ok'], [6,'Rapor','Rapor Semester 1','2025','Digital','ok'],
-  [7,'Ijazah','','2023','Fisik + Digital','ok'], [7,'Kartu Keluarga','','2023','Fisik + Digital','ok'],
-  [7,'Akta Kelahiran','','2023','Fisik','warn'],
-  [8,'Ijazah','','2023','Fisik + Digital','ok'],
-  [1,'Ijazah','','2023','Fisik + Digital','ok'], [1,'Akta Kelahiran','','2023','Fisik + Digital','ok'],
-  [1,'Kartu Keluarga','','2023','Fisik','warn'],
-  [2,'Ijazah','','2025','Digital','ok'], [2,'Akta Kelahiran','','2025','Digital','ok'],
-  [2,'Kartu Keluarga','','2025','Digital','ok'], [2,'Rapor','Rapor Kelas 6 SD','2025','Digital','ok'],
-  [3,'Ijazah','','2025','Fisik + Digital','ok'], [3,'Kartu Keluarga','','2025','Fisik + Digital','ok'],
-  [5,'Ijazah','','2025','Fisik','ok'], [5,'Akta Kelahiran','','2025','Fisik','ok'],
-  [5,'Kartu Keluarga','','2025','Digital','ok'], [5,'Rapor','Rapor Kelas 6 SD','2025','Fisik + Digital','ok'],
-  [null,'Surat masuk/keluar','Surat Undangan Wali Murid 2026','2026','Fisik + Digital','ok'],
-  [null,'Organisasi','SK Pembina Pramuka SMP Muh 1','2025','Fisik','warn'],
+  [1, 'Ijazah', 'Ijazah - Ahmad Fauzi', '2026', 'Fisik + Digital', 'ok'],
+  [1, 'Akta Kelahiran', 'Akta Kelahiran - Ahmad Fauzi', '2026', 'Fisik + Digital', 'ok'],
+  [1, 'Kartu Keluarga', 'Kartu Keluarga - Ahmad Fauzi', '2026', 'Fisik + Digital', 'ok'],
+  [1, 'Rapor', 'Rapor Semester 1 - Ahmad Fauzi', '2026', 'Digital', 'ok'],
+
+  [2, 'Ijazah', 'Ijazah - Rani Kusuma', '2026', 'Fisik + Digital', 'ok'],
+  [2, 'Akta Kelahiran', 'Akta Kelahiran - Rani Kusuma', '2026', 'Fisik + Digital', 'ok'],
+  [2, 'Kartu Keluarga', 'Kartu Keluarga - Rani Kusuma', '2026', 'Digital', 'ok'],
+  [2, 'Rapor', 'Rapor Semester 1 - Rani Kusuma', '2026', 'Digital', 'ok'],
+
+  [6, 'Ijazah', 'Ijazah - Annisa Rahmadani', '2026', 'Digital', 'ok'],
+  [6, 'Kartu Keluarga', 'Kartu Keluarga - Annisa Rahmadani', '2026', 'Fisik', 'warn'],
+
+  [18, 'Ijazah', 'Ijazah - Fajar Ramadhan', '2026', 'Fisik + Digital', 'ok'],
+  [18, 'Akta Kelahiran', 'Akta Kelahiran - Fajar Ramadhan', '2026', 'Fisik + Digital', 'ok'],
+  [18, 'Kartu Keluarga', 'Kartu Keluarga - Fajar Ramadhan', '2026', 'Fisik + Digital', 'ok'],
+  [18, 'Rapor', 'Rapor Semester 1 - Fajar Ramadhan', '2026', 'Digital', 'ok'],
+
+  [35, 'Ijazah', 'Ijazah - Nurul Hidayah', '2025', 'Fisik + Digital', 'ok'],
+  [35, 'Akta Kelahiran', 'Akta Kelahiran - Nurul Hidayah', '2025', 'Fisik + Digital', 'ok'],
+  [35, 'Kartu Keluarga', 'Kartu Keluarga - Nurul Hidayah', '2025', 'Digital', 'ok'],
+  [35, 'Rapor', 'Rapor Semester 1-3 - Nurul Hidayah', '2026', 'Digital', 'ok'],
+
+  [53, 'Ijazah', 'Ijazah - Dedi Firmansyah', '2025', 'Fisik', 'ok'],
+  [53, 'Rapor', 'Rapor Semester 1-4 - Dedi Firmansyah', '2025', 'Digital', 'warn'],
+
+  [69, 'Ijazah', 'Ijazah SD - Andi Pratama', '2024', 'Fisik + Digital', 'ok'],
+  [69, 'Akta Kelahiran', 'Akta Kelahiran - Andi Pratama', '2024', 'Fisik + Digital', 'ok'],
+  [69, 'Kartu Keluarga', 'Kartu Keluarga - Andi Pratama', '2024', 'Fisik + Digital', 'ok'],
+  [69, 'Rapor', 'Rapor Semester 1-5 - Andi Pratama', '2026', 'Digital', 'ok'],
+  [69, 'Lainnya', 'Sertifikat Juara 1 Olimpiade Matematika', '2025', 'Digital', 'ok'],
+
+  [85, 'Ijazah', 'Ijazah SD - Budi Santoso', '2024', 'Fisik + Digital', 'ok'],
+  [85, 'Akta Kelahiran', 'Akta Kelahiran - Budi Santoso', '2024', 'Fisik + Digital', 'ok'],
+  [85, 'Kartu Keluarga', 'Kartu Keluarga - Budi Santoso', '2024', 'Digital', 'ok'],
+  [85, 'Rapor', 'Rapor Semester 1-5 - Budi Santoso', '2026', 'Digital', 'ok'],
+
+  [null, 'Surat masuk/keluar', 'Surat Undangan Wali Murid 2026', '2026', 'Fisik + Digital', 'ok'],
+  [null, 'Organisasi', 'SK Pembina Pramuka SMP Muh 1', '2025', 'Fisik', 'warn'],
 ].forEach(r => seedDoc(...r));
 
 let activity = [
@@ -1068,6 +1182,7 @@ function renderSiswa() {
             <button class="row-btn accent" onclick="openBerkas(${s.id})">&#128193; Berkas</button>
             <button class="row-btn" onclick="openPrintDokumen(${s.id})">&#128438; Cetak Dokumen</button>
             <button class="row-btn" onclick="openSiswaModal(${s.id})">Edit</button>
+            <button class="row-btn danger" onclick="deleteSiswa(${s.id})">Hapus</button>
           </div></td>
         </tr>`;
       }).join('');
@@ -1151,24 +1266,121 @@ function renderArsip() {
     .forEach(id => document.getElementById(id).addEventListener(ev, renderArsip));
 });
 
-function resolveDoc(id) {
+// =====================================================================
+//  REST API INTEGRATION (MySQL: arsip_siswa) & LOCAL STORAGE BACKUP
+// =====================================================================
+let isApiConnected = false;
+let isLocalLoaded = false;
+
+function saveToLocal() {
+  if (!isApiConnected && isLocalLoaded) {
+    try {
+      localStorage.setItem('arsip_siswa_data', JSON.stringify(siswa));
+      localStorage.setItem('arsip_dokumen_data', JSON.stringify(documents.map(d => ({
+        id: d.id, siswaId: d.siswaId, kategori: d.kategori, judul: d.judul, tahun: d.tahun, jenis: d.jenis, status: d.status
+      }))));
+      localStorage.setItem('arsip_log_data', JSON.stringify(activity));
+    } catch(e) {}
+  }
+}
+
+function loadFromLocal() {
+  try {
+    const s = localStorage.getItem('arsip_siswa_data');
+    if (s) siswa = JSON.parse(s);
+    const d = localStorage.getItem('arsip_dokumen_data');
+    if (d) {
+      documents = JSON.parse(d).map(x => ({ ...x, file: x.file || null }));
+    }
+    const a = localStorage.getItem('arsip_log_data');
+    if (a) activity = JSON.parse(a);
+  } catch(e) {}
+  isLocalLoaded = true;
+}
+
+async function loadFromApi() {
+  try {
+    const res = await fetch('/api/siswa');
+    if (res.ok) {
+      const dataSiswa = await res.json();
+      if (Array.isArray(dataSiswa) && dataSiswa.length > 0) {
+        isApiConnected = true;
+        siswa = dataSiswa.map(s => ({ id: s.id, nama: s.nama, nisn: s.nisn, kelas: s.kelas }));
+      }
+    }
+    const docRes = await fetch('/api/dokumen');
+    if (docRes.ok) {
+      const dataDocs = await docRes.json();
+      if (Array.isArray(dataDocs)) {
+        documents = dataDocs.map(d => ({
+          id: d.id,
+          siswaId: d.siswa_id,
+          kategori: d.kategori,
+          judul: d.nama,
+          tahun: d.tahun,
+          jenis: d.jenis,
+          status: d.status,
+          file: d.file_url ? { name: d.nama, size: 250000, type: d.file_url.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg', url: d.file_url } : null
+        }));
+      }
+    }
+    const logRes = await fetch('/api/backup/logs');
+    if (logRes.ok) {
+      const logs = await logRes.json();
+      if (Array.isArray(logs) && logs.length > 0) {
+        activity = logs.map(l => ({ t: l.waktu, text: l.teks }));
+      }
+    }
+    renderAll();
+  } catch(err) {
+    isApiConnected = false;
+    loadFromLocal();
+    renderAll();
+  }
+}
+
+async function resolveDoc(id) {
   const d = documents.find(x => x.id === id);
   if (!d) return;
   d.status = 'ok';
+  if (isApiConnected) {
+    try {
+      await fetch('/api/dokumen/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama: docTitle(d), kategori: d.kategori, tahun: d.tahun, jenis: d.jenis, status: 'ok' })
+      });
+      await loadFromApi();
+      toast(`Status "${docTitle(d)}" diubah menjadi Lengkap di MySQL`);
+      return;
+    } catch(e) {}
+  }
   logAct(`Tindakan selesai: "${docTitle(d)}" kini berstatus Lengkap`);
   toast(`Status "${docTitle(d)}" diubah menjadi Lengkap`);
   renderAll();
 }
-function deleteDoc(id) {
+
+async function deleteDoc(id) {
   const d = documents.find(x => x.id === id);
   if (!d) return;
   if (!confirm(`Hapus dokumen "${docTitle(d)}"${d.siswaId ? ' milik ' + getSiswa(d.siswaId).nama : ''}?`)) return;
+
+  if (isApiConnected) {
+    try {
+      await fetch('/api/dokumen/' + id, { method: 'DELETE' });
+      toast('Dokumen dihapus dari MySQL');
+      await loadFromApi();
+      return;
+    } catch(e) {}
+  }
+
   if (d.file) URL.revokeObjectURL(d.file.url);
   documents = documents.filter(x => x.id !== id);
   logAct(`Dokumen "${docTitle(d)}" dihapus dari arsip`);
   toast('Dokumen telah dihapus');
   renderAll();
 }
+
 function markPhysical(siswaId, kategori) {
   documents.push({ id: uid(), siswaId, kategori, judul: '', tahun: String(new Date().getFullYear()), jenis: 'Fisik', status: 'ok', file: null });
   logAct(`${KAT_LABEL[kategori]} fisik dicatat untuk ${getSiswa(siswaId).nama}`);
@@ -1269,7 +1481,7 @@ function openDocModal(id = null, preset = {}) {
   document.getElementById('doc-jenis').value = d ? d.jenis : 'Fisik + Digital';
   document.getElementById('doc-status').value = d ? d.status : 'ok';
   document.getElementById('doc-file').value = '';
-  setFileLabel(d && d.file ? `File saat ini: ${d.file.name} (${fmtSize(d.file.size)}) — pilih file baru untuk mengganti` : 'Belum ada file dipilih');
+  setFileLabel(d && d.file ? `File saat ini: ${d.file.name} — pilih file baru untuk mengganti` : 'Belum ada file dipilih');
   document.getElementById('modal-doc').classList.add('show');
 }
 document.getElementById('btn-add-doc').addEventListener('click', () => openDocModal());
@@ -1295,7 +1507,7 @@ fileInput.addEventListener('change', () => {
   document.getElementById('doc-status').value = 'ok';
 });
 
-document.getElementById('doc-save').addEventListener('click', () => {
+document.getElementById('doc-save').addEventListener('click', async () => {
   const sidVal = document.getElementById('doc-siswa').value;
   const siswaId = sidVal ? Number(sidVal) : null;
   const judul = document.getElementById('doc-nama').value.trim();
@@ -1311,6 +1523,31 @@ document.getElementById('doc-save').addEventListener('click', () => {
     return;
   }
   if (file) { const err = validateFile(file); if (err) { toast(err, 'error'); return; } }
+
+  if (isApiConnected) {
+    try {
+      const formData = new FormData();
+      if (siswaId) formData.append('siswa_id', siswaId);
+      formData.append('nama', judul || (KAT_LABEL[kategori] || kategori));
+      formData.append('kategori', kategori);
+      formData.append('tahun', tahun);
+      formData.append('jenis', jenis);
+      formData.append('status', status);
+      if (file) formData.append('file', file);
+
+      const url = editingDocId !== null ? `/api/dokumen/${editingDocId}` : '/api/dokumen';
+      const method = editingDocId !== null ? 'PUT' : 'POST';
+
+      const res = await fetch(url, { method, body: formData });
+      const data = await res.json();
+      if (data.id) {
+        toast(editingDocId !== null ? 'Dokumen berhasil diperbarui di MySQL!' : 'Dokumen berhasil disimpan ke MySQL!');
+        await loadFromApi();
+        closeModal('modal-doc');
+        return;
+      }
+    } catch(err) { console.error(err); }
+  }
 
   let d;
   if (editingDocId !== null) {
@@ -1346,12 +1583,33 @@ function openSiswaModal(id = null) {
 document.getElementById('btn-add-siswa').addEventListener('click', () => openSiswaModal());
 document.getElementById('siswa-cancel').addEventListener('click', () => closeModal('modal-siswa'));
 
-document.getElementById('siswa-save').addEventListener('click', () => {
+document.getElementById('siswa-save').addEventListener('click', async () => {
   const nama = document.getElementById('siswa-nama').value.trim();
   const nisn = document.getElementById('siswa-nisn').value.trim();
   const kelas = normKelas(document.getElementById('siswa-kelas').value);
   if (!nama || !nisn || !kelas) { toast('Nama, NISN, dan Kelas siswa wajib diisi!', 'error'); return; }
   if (siswa.some(s => s.nisn === nisn && s.id !== editingSiswaId)) { toast('NISN tersebut sudah terdaftar pada siswa lain', 'error'); return; }
+
+  if (isApiConnected) {
+    try {
+      const url = editingSiswaId !== null ? `/api/siswa/${editingSiswaId}` : '/api/siswa';
+      const method = editingSiswaId !== null ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama, nisn, kelas })
+      });
+      const data = await res.json();
+      if (data.id) {
+        toast(editingSiswaId !== null ? 'Data siswa berhasil diperbarui di MySQL!' : 'Data siswa berhasil disimpan ke MySQL!');
+        await loadFromApi();
+        closeModal('modal-siswa');
+        if (editingSiswaId === null) openBerkas(data.id);
+        return;
+      }
+    } catch(err) { console.error(err); }
+  }
 
   if (editingSiswaId !== null) {
     Object.assign(getSiswa(editingSiswaId), { nama, nisn, kelas });
@@ -1366,23 +1624,39 @@ document.getElementById('siswa-save').addEventListener('click', () => {
     toast('Data siswa ditambahkan — silakan unggah dokumennya');
     closeModal('modal-siswa');
     renderAll();
-    openBerkas(baru.id);   // langsung buka Berkas untuk unggah ijazah & dokumen lain
+    openBerkas(baru.id);
   }
 });
 
-document.getElementById('siswa-delete').addEventListener('click', () => {
-  const s = getSiswa(editingSiswaId);
+async function deleteSiswa(id) {
+  const s = getSiswa(id);
   if (!s) return;
   const n = docsOf(s.id).length;
-  if (!confirm(`Hapus siswa "${s.nama}"${n ? ' beserta ' + n + ' dokumennya' : ''}? Tindakan ini tidak dapat dibatalkan.`)) return;
+  if (!confirm(`Hapus data siswa "${s.nama}" (Kelas ${s.kelas})${n ? ' beserta ' + n + ' dokumennya' : ''}? Tindakan ini tidak dapat dibatalkan.`)) return;
+
+  if (isApiConnected) {
+    try {
+      await fetch('/api/siswa/' + s.id, { method: 'DELETE' });
+      toast(`Data siswa "${s.nama}" berhasil dihapus dari MySQL`);
+      await loadFromApi();
+      closeModal('modal-siswa');
+      if (currentBerkasId === s.id) closeModal('modal-berkas');
+      return;
+    } catch(err) { console.error(err); }
+  }
+
   docsOf(s.id).forEach(d => { if (d.file) URL.revokeObjectURL(d.file.url); });
   documents = documents.filter(d => d.siswaId !== s.id);
   siswa = siswa.filter(x => x.id !== s.id);
-  logAct(`Data siswa "${s.nama}" dihapus`);
-  toast('Data siswa telah dihapus');
+  logAct(`Data siswa "${s.nama}" dihapus dari sistem`);
+  toast(`Data siswa "${s.nama}" berhasil dihapus`);
   closeModal('modal-siswa');
   if (currentBerkasId === s.id) closeModal('modal-berkas');
   renderAll();
+}
+
+document.getElementById('siswa-delete').addEventListener('click', () => {
+  if (editingSiswaId !== null) deleteSiswa(editingSiswaId);
 });
 
 // =====================================================================
@@ -1426,12 +1700,26 @@ window.addEventListener('afterprint', () => document.body.classList.remove('prin
 document.getElementById('preview-close').addEventListener('click', () => closeModal('modal-preview'));
 
 // =====================================================================
-//  BACKUP MANUAL
+//  BACKUP MANUAL (MySQL Sync)
 // =====================================================================
-document.getElementById('btn-trigger-backup').addEventListener('click', () => {
+document.getElementById('btn-trigger-backup').addEventListener('click', async () => {
   const btn = document.getElementById('btn-trigger-backup');
   btn.disabled = true;
   btn.innerHTML = '&#8987; Melakukan Sinkronisasi...';
+
+  if (isApiConnected) {
+    try {
+      const res = await fetch('/api/backup/trigger', { method: 'POST' });
+      const data = await res.json();
+      const now = data.timestamp || (new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB');
+      [1, 2, 3].forEach(i => document.getElementById('sync-time-' + i).textContent = 'Sinkron terakhir: Hari ini, ' + now);
+      await loadFromApi();
+      btn.disabled = false;
+      btn.innerHTML = '&#9729; Jalankan Backup Sekarang';
+      toast('Sinkronisasi backup database MySQL berhasil!');
+      return;
+    } catch(err) { console.error(err); }
+  }
 
   setTimeout(() => {
     const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
@@ -1455,13 +1743,16 @@ function renderAll() {
   renderDashboard();
   renderActivity();
   if (currentBerkasId !== null && document.getElementById('modal-berkas').classList.contains('show')) renderBerkas();
+  saveToLocal();
 }
 
-// Isi pilihan kategori (form unggah + filter)
+// Isi pilihan kategori
 document.getElementById('doc-kategori').innerHTML = KATEGORI.map(k => `<option>${k}</option>`).join('');
 document.getElementById('arsip-filter-kat').innerHTML = '<option value="">Semua Kategori</option>' + KATEGORI.map(k => `<option>${k}</option>`).join('');
 
+loadFromLocal();
 renderAll();
+loadFromApi();
 </script>
 </body>
 </html>
