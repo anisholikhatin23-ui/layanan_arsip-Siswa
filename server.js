@@ -48,6 +48,15 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/logo.png', (req, res) => res.sendFile(path.join(__dirname, 'logo.png')));
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', mysql: 'connected' });
+  } catch (err) {
+    console.error('Health check gagal mengakses MySQL:', err);
+    res.status(503).json({ status: 'error', mysql: 'disconnected' });
+  }
+});
 
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
   fs.mkdirSync(path.join(__dirname, 'uploads'));
@@ -450,7 +459,7 @@ async function initMySQL() {
     // Seed data sampel 100 siswa jika tabel siswa masih kosong
     const [rows] = await pool.query('SELECT COUNT(*) AS total FROM siswa');
     if (rows[0].total === 0) {
-      console.log('📦 Mengisi 100 data siswa per kelas ke MySQL database arsip_siswa...');
+      console.log('📦 Mengisi 100 data siswa contoh ke MySQL database arsip_siswa...');
       await pool.query(`
         INSERT INTO siswa (id, nama, nisn, kelas, status_dokumen) VALUES
         (1, 'Siswa Contoh 001', 'DEMO-0001', 'VII A', 'ok'),

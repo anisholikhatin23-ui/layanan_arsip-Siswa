@@ -13,7 +13,7 @@ Aplikasi Pengelolaan Dokumen Administrasi Siswa terintegrasi dengan Database MyS
    ```sql
    CREATE DATABASE IF NOT EXISTS arsip_siswa;
    ```
-4. Impor struktur tabel & data awal dengan mengimpor file `schema.sql` di phpMyAdmin (terdapat 100 data siswa contoh total untuk kelas VII A - IX B), atau biarkan `server.js` membuat tabel & memasukkan data otomatis saat pertama kali dijalankan.
+4. Buat database MySQL `arsip_siswa` dan impor struktur tabel dari `schema.sql`, atau buat database kosong bernama `arsip_siswa`; server membuat tabel dan data contoh saat pertama kali dijalankan.
 
 Skema mencakup entitas pada ERD pengelolaan arsip serta backup/sinkronisasi. Saat server dijalankan, kolom dan tabel ERD yang belum ada ditambahkan tanpa menghapus kolom lama; data kelas dan kategori dari tabel lama juga dinormalisasi ke tabel relasinya.
 Nama primary key lama (`id`) pada tabel siswa, dokumen, dan log dipertahankan agar endpoint dan data yang sudah ada tetap kompatibel; kolom foreign key dan relasi ERD ditambahkan.
@@ -62,12 +62,12 @@ Unggahan PDF/JPG/PNG (maksimal 5 MB) disimpan di folder Drive tersebut. MySQL me
 
 GitHub Pages hanya menyajikan frontend statis; ia tidak menjalankan Node.js atau MySQL. Agar perubahan data tersimpan dan dapat dibuka dari beberapa perangkat:
 
-1. Buat service Node.js dari repository ini di Railway, lalu tambahkan service MySQL pada project yang sama.
-2. Isi variabel `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, dan `DB_PORT` pada service Node.js memakai detail koneksi internal dari service MySQL Railway. Jangan memakai host `localhost` untuk database online.
+1. Buat project di Railway, tambahkan service MySQL, lalu deploy service Node.js dari repository ini. File `railway.toml` mengatur `npm start`, health check `/health`, dan restart otomatis.
+2. Tambahkan variabel `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, dan `DB_PORT` pada service Node.js dengan memakai reference variables koneksi internal dari service MySQL Railway. Jangan memakai host `localhost` untuk database online. Akun database juga harus punya izin membuat tabel di database yang dipilih.
 3. Isi `INITIAL_ADMIN_USERNAME`, `INITIAL_ADMIN_NAME`, `INITIAL_ADMIN_PASSWORD`, dan `FRONTEND_ORIGINS` di Variables service Node.js. Untuk GitHub Pages, origin frontend adalah `https://anisholikhatin23-ui.github.io` (tanpa nama repository dan tanpa garis miring di akhir). Isi rahasia hanya di dashboard Railway, jangan di GitHub atau chat.
 4. Isi `GOOGLE_DRIVE_FOLDER_ID` dan kredensial Google Drive di environment Railway sebelum mengunggah berkas siswa.
 5. Setelah Railway menyediakan domain backend HTTPS, isi konstanta `API_BASE_URL` di `index.html` dengan origin tersebut, misalnya `https://nama-service.up.railway.app`, lalu commit/push perubahan agar GitHub Pages menerbitkan frontend.
-6. Pada deploy pertama, backend membuat tabel dan data contoh otomatis, serta membuat akun admin berdasarkan variabel `INITIAL_ADMIN_*`. Login menggunakan username dan kata sandi yang Anda atur sendiri di Railway.
+6. Pada deploy pertama, backend membuat tabel dan data contoh otomatis di database yang dipilih, serta membuat akun admin berdasarkan variabel `INITIAL_ADMIN_*`. Login menggunakan username dan kata sandi yang Anda atur sendiri di Railway. Endpoint `https://<domain-backend>/health` dapat dipakai untuk memastikan backend dan MySQL tersambung.
 
 Jangan memasukkan data siswa sungguhan sebelum langkah-langkah tersebut selesai dan sudah diuji. Penyimpanan lokal browser bukan database bersama dan tidak tersinkron antarperangkat.
 
