@@ -2017,13 +2017,19 @@ async function deleteSiswa(id) {
 
   if (isApiConnected) {
     try {
-      await apiFetch('/api/siswa/' + s.id, { method: 'DELETE' });
+      const response = await apiFetch('/api/siswa/' + s.id, { method: 'DELETE' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal menghapus siswa dari MySQL');
       toast(`Data siswa "${s.nama}" berhasil dihapus dari MySQL`);
       await loadFromApi();
       closeModal('modal-siswa');
       if (currentBerkasId === s.id) closeModal('modal-berkas');
       return;
-    } catch(err) { console.error(err); }
+    } catch(err) {
+      console.error(err);
+      toast(`Gagal menghapus dari MySQL: ${err.message}`, 'error');
+      return;
+    }
   }
 
   docsOf(s.id).forEach(d => { if (d.file) URL.revokeObjectURL(d.file.url); });
