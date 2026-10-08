@@ -1653,7 +1653,7 @@ app.use((err, req, res, next) => {
 async function startServer() {
   try {
     await initMySQL();
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 REST API Server MySQL berjalan di http://localhost:${PORT}`);
       console.log(`📊 Database MySQL: ${DB_NAME}`);
     });
