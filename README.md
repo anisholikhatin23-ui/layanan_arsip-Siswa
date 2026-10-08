@@ -84,7 +84,7 @@ Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubu
 
 | Method | Endpoint | Deskripsi |
 | ------ | -------- | --------- |
-| **GET** | `/api/siswa` | Mengambil seluruh data siswa dari DB MySQL (`arsip_siswa.siswa`), termasuk 100 data contoh awal |
+| **GET** | `/api/siswa` | Mengambil seluruh data siswa dari DB MySQL (`arsip_siswa.siswa`), termasuk daftar 100 siswa per kelas |
 | **POST** | `/api/auth/login` | Memulai sesi staf TU |
 | **POST** | `/api/siswa` | Menyimpan data siswa baru ke DB MySQL |
 | **PUT** | `/api/siswa/:id` | Memperbarui/edit data siswa (nama, nisn, kelas) di DB MySQL |
@@ -111,6 +111,6 @@ Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubu
 
 - [index.html](./index.html) — Frontend pengelolaan dokumen siswa; isi `API_BASE_URL` untuk menghubungkannya ke backend online
 - [server.js](./server.js) — Server Backend REST API yang terhubung ke MySQL `arsip_siswa`
-- [schema.sql](./schema.sql) — Struktur database MySQL dan data contoh
+- [schema.sql](./schema.sql) — Struktur database MySQL
 - [.env.example](./.env.example) — Contoh pengaturan koneksi MySQL dan Google Drive
 - [package.json](./package.json) — Manifest dependensi backend

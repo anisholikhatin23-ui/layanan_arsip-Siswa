@@ -502,119 +502,8 @@ async function initMySQL() {
     await ensureForeignKey('detail_sinkron', 'fk_sinkron_backup', 'id_backup', 'backup', 'id_backup', 'CASCADE');
     await ensureForeignKey('detail_sinkron', 'fk_sinkron_titik', 'id_titik', 'titik_penyimpanan', 'id_titik', 'RESTRICT');
 
-    // Seed data sampel 100 siswa jika tabel siswa masih kosong
-    const [rows] = await pool.query('SELECT COUNT(*) AS total FROM siswa');
-    if (rows[0].total === 0) {
-      console.log('📦 Mengisi 100 data siswa contoh ke MySQL database arsip_siswa...');
-      await pool.query(`
-        INSERT INTO siswa (id, nama, nisn, kelas, status_dokumen) VALUES
-        (1, 'Siswa Contoh 001', 'DEMO-0001', 'VII A', 'ok'),
-        (2, 'Siswa Contoh 002', 'DEMO-0002', 'VII A', 'ok'),
-        (3, 'Siswa Contoh 003', 'DEMO-0003', 'VII A', 'ok'),
-        (4, 'Siswa Contoh 004', 'DEMO-0004', 'VII A', 'ok'),
-        (5, 'Siswa Contoh 005', 'DEMO-0005', 'VII A', 'ok'),
-        (6, 'Siswa Contoh 006', 'DEMO-0006', 'VII A', 'warn'),
-        (7, 'Siswa Contoh 007', 'DEMO-0007', 'VII A', 'ok'),
-        (8, 'Siswa Contoh 008', 'DEMO-0008', 'VII A', 'ok'),
-        (9, 'Siswa Contoh 009', 'DEMO-0009', 'VII A', 'bad'),
-        (10, 'Siswa Contoh 010', 'DEMO-0010', 'VII A', 'ok'),
-        (11, 'Siswa Contoh 011', 'DEMO-0011', 'VII A', 'ok'),
-        (12, 'Siswa Contoh 012', 'DEMO-0012', 'VII A', 'ok'),
-        (13, 'Siswa Contoh 013', 'DEMO-0013', 'VII A', 'warn'),
-        (14, 'Siswa Contoh 014', 'DEMO-0014', 'VII A', 'ok'),
-        (15, 'Siswa Contoh 015', 'DEMO-0015', 'VII A', 'ok'),
-        (16, 'Siswa Contoh 016', 'DEMO-0016', 'VII A', 'ok'),
-        (17, 'Siswa Contoh 017', 'DEMO-0017', 'VII A', 'ok'),
-
-        (18, 'Siswa Contoh 018', 'DEMO-0018', 'VII B', 'ok'),
-        (19, 'Siswa Contoh 019', 'DEMO-0019', 'VII B', 'ok'),
-        (20, 'Siswa Contoh 020', 'DEMO-0020', 'VII B', 'warn'),
-        (21, 'Siswa Contoh 021', 'DEMO-0021', 'VII B', 'ok'),
-        (22, 'Siswa Contoh 022', 'DEMO-0022', 'VII B', 'ok'),
-        (23, 'Siswa Contoh 023', 'DEMO-0023', 'VII B', 'ok'),
-        (24, 'Siswa Contoh 024', 'DEMO-0024', 'VII B', 'ok'),
-        (25, 'Siswa Contoh 025', 'DEMO-0025', 'VII B', 'bad'),
-        (26, 'Siswa Contoh 026', 'DEMO-0026', 'VII B', 'ok'),
-        (27, 'Siswa Contoh 027', 'DEMO-0027', 'VII B', 'ok'),
-        (28, 'Siswa Contoh 028', 'DEMO-0028', 'VII B', 'ok'),
-        (29, 'Siswa Contoh 029', 'DEMO-0029', 'VII B', 'warn'),
-        (30, 'Siswa Contoh 030', 'DEMO-0030', 'VII B', 'ok'),
-        (31, 'Siswa Contoh 031', 'DEMO-0031', 'VII B', 'ok'),
-        (32, 'Siswa Contoh 032', 'DEMO-0032', 'VII B', 'ok'),
-        (33, 'Siswa Contoh 033', 'DEMO-0033', 'VII B', 'ok'),
-        (34, 'Siswa Contoh 034', 'DEMO-0034', 'VII B', 'ok'),
-
-        (35, 'Siswa Contoh 035', 'DEMO-0035', 'VIII A', 'ok'),
-        (36, 'Siswa Contoh 036', 'DEMO-0036', 'VIII A', 'ok'),
-        (37, 'Siswa Contoh 037', 'DEMO-0037', 'VIII A', 'ok'),
-        (38, 'Siswa Contoh 038', 'DEMO-0038', 'VIII A', 'warn'),
-        (39, 'Siswa Contoh 039', 'DEMO-0039', 'VIII A', 'ok'),
-        (40, 'Siswa Contoh 040', 'DEMO-0040', 'VIII A', 'ok'),
-        (41, 'Siswa Contoh 041', 'DEMO-0041', 'VIII A', 'ok'),
-        (42, 'Siswa Contoh 042', 'DEMO-0042', 'VIII A', 'bad'),
-        (43, 'Siswa Contoh 043', 'DEMO-0043', 'VIII A', 'ok'),
-        (44, 'Siswa Contoh 044', 'DEMO-0044', 'VIII A', 'ok'),
-        (45, 'Siswa Contoh 045', 'DEMO-0045', 'VIII A', 'ok'),
-        (46, 'Siswa Contoh 046', 'DEMO-0046', 'VIII A', 'warn'),
-        (47, 'Siswa Contoh 047', 'DEMO-0047', 'VIII A', 'ok'),
-        (48, 'Siswa Contoh 048', 'DEMO-0048', 'VIII A', 'ok'),
-        (49, 'Siswa Contoh 049', 'DEMO-0049', 'VIII A', 'ok'),
-        (50, 'Siswa Contoh 050', 'DEMO-0050', 'VIII A', 'ok'),
-        (51, 'Siswa Contoh 051', 'DEMO-0051', 'VIII A', 'ok'),
-
-        (52, 'Siswa Contoh 052', 'DEMO-0052', 'VIII B', 'ok'),
-        (53, 'Siswa Contoh 053', 'DEMO-0053', 'VIII B', 'warn'),
-        (54, 'Siswa Contoh 054', 'DEMO-0054', 'VIII B', 'ok'),
-        (55, 'Siswa Contoh 055', 'DEMO-0055', 'VIII B', 'ok'),
-        (56, 'Siswa Contoh 056', 'DEMO-0056', 'VIII B', 'ok'),
-        (57, 'Siswa Contoh 057', 'DEMO-0057', 'VIII B', 'bad'),
-        (58, 'Siswa Contoh 058', 'DEMO-0058', 'VIII B', 'ok'),
-        (59, 'Siswa Contoh 059', 'DEMO-0059', 'VIII B', 'ok'),
-        (60, 'Siswa Contoh 060', 'DEMO-0060', 'VIII B', 'warn'),
-        (61, 'Siswa Contoh 061', 'DEMO-0061', 'VIII B', 'ok'),
-        (62, 'Siswa Contoh 062', 'DEMO-0062', 'VIII B', 'ok'),
-        (63, 'Siswa Contoh 063', 'DEMO-0063', 'VIII B', 'ok'),
-        (64, 'Siswa Contoh 064', 'DEMO-0064', 'VIII B', 'ok'),
-        (65, 'Siswa Contoh 065', 'DEMO-0065', 'VIII B', 'ok'),
-        (66, 'Siswa Contoh 066', 'DEMO-0066', 'VIII B', 'ok'),
-        (67, 'Siswa Contoh 067', 'DEMO-0067', 'VIII B', 'ok'),
-        (68, 'Siswa Contoh 068', 'DEMO-0068', 'VIII B', 'ok'),
-
-        (69, 'Siswa Contoh 069', 'DEMO-0069', 'IX A', 'ok'),
-        (70, 'Siswa Contoh 070', 'DEMO-0070', 'IX A', 'ok'),
-        (71, 'Siswa Contoh 071', 'DEMO-0071', 'IX A', 'warn'),
-        (72, 'Siswa Contoh 072', 'DEMO-0072', 'IX A', 'ok'),
-        (73, 'Siswa Contoh 073', 'DEMO-0073', 'IX A', 'ok'),
-        (74, 'Siswa Contoh 074', 'DEMO-0074', 'IX A', 'ok'),
-        (75, 'Siswa Contoh 075', 'DEMO-0075', 'IX A', 'ok'),
-        (76, 'Siswa Contoh 076', 'DEMO-0076', 'IX A', 'bad'),
-        (77, 'Siswa Contoh 077', 'DEMO-0077', 'IX A', 'ok'),
-        (78, 'Siswa Contoh 078', 'DEMO-0078', 'IX A', 'ok'),
-        (79, 'Siswa Contoh 079', 'DEMO-0079', 'IX A', 'ok'),
-        (80, 'Siswa Contoh 080', 'DEMO-0080', 'IX A', 'warn'),
-        (81, 'Siswa Contoh 081', 'DEMO-0081', 'IX A', 'ok'),
-        (82, 'Siswa Contoh 082', 'DEMO-0082', 'IX A', 'ok'),
-        (83, 'Siswa Contoh 083', 'DEMO-0083', 'IX A', 'ok'),
-        (84, 'Siswa Contoh 084', 'DEMO-0084', 'IX A', 'ok'),
-
-        (85, 'Siswa Contoh 085', 'DEMO-0085', 'IX B', 'ok'),
-        (86, 'Siswa Contoh 086', 'DEMO-0086', 'IX B', 'ok'),
-        (87, 'Siswa Contoh 087', 'DEMO-0087', 'IX B', 'warn'),
-        (88, 'Siswa Contoh 088', 'DEMO-0088', 'IX B', 'ok'),
-        (89, 'Siswa Contoh 089', 'DEMO-0089', 'IX B', 'ok'),
-        (90, 'Siswa Contoh 090', 'DEMO-0090', 'IX B', 'ok'),
-        (91, 'Siswa Contoh 091', 'DEMO-0091', 'IX B', 'bad'),
-        (92, 'Siswa Contoh 092', 'DEMO-0092', 'IX B', 'ok'),
-        (93, 'Siswa Contoh 093', 'DEMO-0093', 'IX B', 'ok'),
-        (94, 'Siswa Contoh 094', 'DEMO-0094', 'IX B', 'ok'),
-        (95, 'Siswa Contoh 095', 'DEMO-0095', 'IX B', 'warn'),
-        (96, 'Siswa Contoh 096', 'DEMO-0096', 'IX B', 'ok'),
-        (97, 'Siswa Contoh 097', 'DEMO-0097', 'IX B', 'ok'),
-        (98, 'Siswa Contoh 098', 'DEMO-0098', 'IX B', 'ok'),
-        (99, 'Siswa Contoh 099', 'DEMO-0099', 'IX B', 'ok'),
-        (100, 'Siswa Contoh 100', 'DEMO-0100', 'IX B', 'ok')
-      `);
-    }
+    // Insert the canonical roster before seeding documents that refer to students.
+    await syncSeededStudents();
 
     // Seed data dokumen sampel jika tabel dokumen masih kosong
     const [docRows] = await pool.query('SELECT COUNT(*) AS total FROM dokumen');
@@ -622,50 +511,49 @@ async function initMySQL() {
       console.log('📦 Mengisi sample data dokumen ke MySQL database arsip_siswa...');
       await pool.query(`
         INSERT INTO dokumen (id, siswa_id, nama, kategori, tahun, jenis, status) VALUES
-        (1, 1, 'Ijazah - Siswa Contoh 001', 'Ijazah', '2026', 'Fisik + Digital', 'ok'),
-        (2, 1, 'Akta Kelahiran - Siswa Contoh 001', 'Akta Kelahiran', '2026', 'Fisik + Digital', 'ok'),
-        (3, 1, 'Kartu Keluarga - Siswa Contoh 001', 'Kartu Keluarga', '2026', 'Fisik + Digital', 'ok'),
-        (4, 1, 'Rapor Semester 1 - Siswa Contoh 001', 'Rapor', '2026', 'Digital', 'ok'),
+        (1, 1, 'Ijazah - Ahmad Fauzi', 'Ijazah', '2026', 'Fisik + Digital', 'ok'),
+        (2, 1, 'Akta Kelahiran - Ahmad Fauzi', 'Akta Kelahiran', '2026', 'Fisik + Digital', 'ok'),
+        (3, 1, 'Kartu Keluarga - Ahmad Fauzi', 'Kartu Keluarga', '2026', 'Fisik + Digital', 'ok'),
+        (4, 1, 'Rapor Semester 1 - Ahmad Fauzi', 'Rapor', '2026', 'Digital', 'ok'),
 
-        (5, 2, 'Ijazah - Siswa Contoh 002', 'Ijazah', '2026', 'Fisik + Digital', 'ok'),
-        (6, 2, 'Akta Kelahiran - Siswa Contoh 002', 'Akta Kelahiran', '2026', 'Fisik + Digital', 'ok'),
-        (7, 2, 'Kartu Keluarga - Siswa Contoh 002', 'Kartu Keluarga', '2026', 'Digital', 'ok'),
-        (8, 2, 'Rapor Semester 1 - Siswa Contoh 002', 'Rapor', '2026', 'Digital', 'ok'),
+        (5, 2, 'Ijazah - Rani Kusuma', 'Ijazah', '2026', 'Fisik + Digital', 'ok'),
+        (6, 2, 'Akta Kelahiran - Rani Kusuma', 'Akta Kelahiran', '2026', 'Fisik + Digital', 'ok'),
+        (7, 2, 'Kartu Keluarga - Rani Kusuma', 'Kartu Keluarga', '2026', 'Digital', 'ok'),
+        (8, 2, 'Rapor Semester 1 - Rani Kusuma', 'Rapor', '2026', 'Digital', 'ok'),
 
-        (9, 6, 'Ijazah - Siswa Contoh 006', 'Ijazah', '2026', 'Digital', 'ok'),
-        (10, 6, 'Kartu Keluarga - Siswa Contoh 006', 'Kartu Keluarga', '2026', 'Fisik', 'warn'),
+        (9, 6, 'Ijazah - Annisa Rahmadani', 'Ijazah', '2026', 'Digital', 'ok'),
+        (10, 6, 'Kartu Keluarga - Annisa Rahmadani', 'Kartu Keluarga', '2026', 'Fisik', 'warn'),
 
-        (11, 18, 'Ijazah - Siswa Contoh 018', 'Ijazah', '2026', 'Fisik + Digital', 'ok'),
-        (12, 18, 'Akta Kelahiran - Siswa Contoh 018', 'Akta Kelahiran', '2026', 'Fisik + Digital', 'ok'),
-        (13, 18, 'Kartu Keluarga - Siswa Contoh 018', 'Kartu Keluarga', '2026', 'Fisik + Digital', 'ok'),
-        (14, 18, 'Rapor Semester 1 - Siswa Contoh 018', 'Rapor', '2026', 'Digital', 'ok'),
+        (11, 18, 'Ijazah - Fajar Ramadhan', 'Ijazah', '2026', 'Fisik + Digital', 'ok'),
+        (12, 18, 'Akta Kelahiran - Fajar Ramadhan', 'Akta Kelahiran', '2026', 'Fisik + Digital', 'ok'),
+        (13, 18, 'Kartu Keluarga - Fajar Ramadhan', 'Kartu Keluarga', '2026', 'Fisik + Digital', 'ok'),
+        (14, 18, 'Rapor Semester 1 - Fajar Ramadhan', 'Rapor', '2026', 'Digital', 'ok'),
 
-        (15, 35, 'Ijazah - Siswa Contoh 035', 'Ijazah', '2025', 'Fisik + Digital', 'ok'),
-        (16, 35, 'Akta Kelahiran - Siswa Contoh 035', 'Akta Kelahiran', '2025', 'Fisik + Digital', 'ok'),
-        (17, 35, 'Kartu Keluarga - Siswa Contoh 035', 'Kartu Keluarga', '2025', 'Digital', 'ok'),
-        (18, 35, 'Rapor Semester 1-3 - Siswa Contoh 035', 'Rapor', '2026', 'Digital', 'ok'),
+        (15, 35, 'Ijazah - Nurul Hidayah', 'Ijazah', '2025', 'Fisik + Digital', 'ok'),
+        (16, 35, 'Akta Kelahiran - Nurul Hidayah', 'Akta Kelahiran', '2025', 'Fisik + Digital', 'ok'),
+        (17, 35, 'Kartu Keluarga - Nurul Hidayah', 'Kartu Keluarga', '2025', 'Digital', 'ok'),
+        (18, 35, 'Rapor Semester 1-3 - Nurul Hidayah', 'Rapor', '2026', 'Digital', 'ok'),
 
-        (19, 53, 'Ijazah - Siswa Contoh 053', 'Ijazah', '2025', 'Fisik', 'ok'),
-        (20, 53, 'Rapor Semester 1-4 - Siswa Contoh 053', 'Rapor', '2025', 'Digital', 'warn'),
+        (19, 53, 'Ijazah - Dedi Firmansyah', 'Ijazah', '2025', 'Fisik', 'ok'),
+        (20, 53, 'Rapor Semester 1-4 - Dedi Firmansyah', 'Rapor', '2025', 'Digital', 'warn'),
 
-        (21, 69, 'Ijazah SD - Siswa Contoh 069', 'Ijazah', '2024', 'Fisik + Digital', 'ok'),
-        (22, 69, 'Akta Kelahiran - Siswa Contoh 069', 'Akta Kelahiran', '2024', 'Fisik + Digital', 'ok'),
-        (23, 69, 'Kartu Keluarga - Siswa Contoh 069', 'Kartu Keluarga', '2024', 'Fisik + Digital', 'ok'),
-        (24, 69, 'Rapor Semester 1-5 - Siswa Contoh 069', 'Rapor', '2026', 'Digital', 'ok'),
+        (21, 69, 'Ijazah SD - Andi Pratama', 'Ijazah', '2024', 'Fisik + Digital', 'ok'),
+        (22, 69, 'Akta Kelahiran - Andi Pratama', 'Akta Kelahiran', '2024', 'Fisik + Digital', 'ok'),
+        (23, 69, 'Kartu Keluarga - Andi Pratama', 'Kartu Keluarga', '2024', 'Fisik + Digital', 'ok'),
+        (24, 69, 'Rapor Semester 1-5 - Andi Pratama', 'Rapor', '2026', 'Digital', 'ok'),
         (25, 69, 'Sertifikat Juara 1 Olimpiade Matematika', 'Lainnya', '2025', 'Digital', 'ok'),
 
-        (26, 85, 'Ijazah SD - Siswa Contoh 085', 'Ijazah', '2024', 'Fisik + Digital', 'ok'),
-        (27, 85, 'Akta Kelahiran - Siswa Contoh 085', 'Akta Kelahiran', '2024', 'Fisik + Digital', 'ok'),
-        (28, 85, 'Kartu Keluarga - Siswa Contoh 085', 'Kartu Keluarga', '2024', 'Digital', 'ok'),
-        (29, 85, 'Rapor Semester 1-5 - Siswa Contoh 085', 'Rapor', '2026', 'Digital', 'ok'),
+        (26, 85, 'Ijazah SD - Budi Santoso', 'Ijazah', '2024', 'Fisik + Digital', 'ok'),
+        (27, 85, 'Akta Kelahiran - Budi Santoso', 'Akta Kelahiran', '2024', 'Fisik + Digital', 'ok'),
+        (28, 85, 'Kartu Keluarga - Budi Santoso', 'Kartu Keluarga', '2024', 'Digital', 'ok'),
+        (29, 85, 'Rapor Semester 1-5 - Budi Santoso', 'Rapor', '2026', 'Digital', 'ok'),
 
         (30, NULL, 'Surat Undangan Wali Murid 2026', 'Surat masuk/keluar', '2026', 'Fisik + Digital', 'ok'),
         (31, NULL, 'SK Pembina Pramuka SMP Muh 1', 'Organisasi', '2025', 'Fisik', 'warn')
       `);
     }
 
-    // Ensure class groupings for sample 100 students (VII A, VII B, VIII A, VIII B, IX A, IX B)
-    await syncSeededStudents();
+    // Ensure class records exist for every student.
     await pool.query(`
       INSERT IGNORE INTO kelas (nama_kelas, tingkat, tahun_ajaran)
       SELECT DISTINCT kelas, SUBSTRING_INDEX(kelas, ' ', 1), '2026' FROM siswa
@@ -1108,11 +996,15 @@ async function syncSeededStudents(force = false) {
         [nama, nama, nama, nisn, nisn, kelas, idKelas, rows[0].id_siswa, Number(force)]
       );
     } else {
-      await pool.query(
+      const [result] = await pool.query(
         `INSERT INTO siswa
          (nama, nama_lengkap, nama_siswa, nisn, nis, kelas, id_kelas, status_dokumen)
          VALUES (?, ?, ?, ?, ?, ?, ?, 'ok')`,
         [nama, nama, nama, nisn, nisn, kelas, idKelas]
+      );
+      await pool.query(
+        'UPDATE siswa SET id = COALESCE(id, ?) WHERE id_siswa = ?',
+        [result.insertId, result.insertId]
       );
     }
     const legacyName = `Siswa Contoh ${String(index + 1).padStart(3, '0')}`;
@@ -1180,146 +1072,6 @@ app.post('/api/siswa/reseed', async (req, res) => {
       count: STUDENT_SEED_DATA.length
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/siswa/reseed-legacy', async (req, res) => {
-  try {
-    const studentsData = [
-      [1, 'Siswa Contoh 001', 'DEMO-0001', 'VII A', 'ok'],
-      [2, 'Siswa Contoh 002', 'DEMO-0002', 'VII A', 'ok'],
-      [3, 'Siswa Contoh 003', 'DEMO-0003', 'VII A', 'ok'],
-      [4, 'Siswa Contoh 004', 'DEMO-0004', 'VII A', 'ok'],
-      [5, 'Siswa Contoh 005', 'DEMO-0005', 'VII A', 'ok'],
-      [6, 'Siswa Contoh 006', 'DEMO-0006', 'VII A', 'warn'],
-      [7, 'Siswa Contoh 007', 'DEMO-0007', 'VII A', 'ok'],
-      [8, 'Siswa Contoh 008', 'DEMO-0008', 'VII A', 'ok'],
-      [9, 'Siswa Contoh 009', 'DEMO-0009', 'VII A', 'bad'],
-      [10, 'Siswa Contoh 010', 'DEMO-0010', 'VII A', 'ok'],
-      [11, 'Siswa Contoh 011', 'DEMO-0011', 'VII A', 'ok'],
-      [12, 'Siswa Contoh 012', 'DEMO-0012', 'VII A', 'ok'],
-      [13, 'Siswa Contoh 013', 'DEMO-0013', 'VII A', 'warn'],
-      [14, 'Siswa Contoh 014', 'DEMO-0014', 'VII A', 'ok'],
-      [15, 'Siswa Contoh 015', 'DEMO-0015', 'VII A', 'ok'],
-      [16, 'Siswa Contoh 016', 'DEMO-0016', 'VII A', 'ok'],
-      [17, 'Siswa Contoh 017', 'DEMO-0017', 'VII A', 'ok'],
-
-      [18, 'Siswa Contoh 018', 'DEMO-0018', 'VII B', 'ok'],
-      [19, 'Siswa Contoh 019', 'DEMO-0019', 'VII B', 'ok'],
-      [20, 'Siswa Contoh 020', 'DEMO-0020', 'VII B', 'warn'],
-      [21, 'Siswa Contoh 021', 'DEMO-0021', 'VII B', 'ok'],
-      [22, 'Siswa Contoh 022', 'DEMO-0022', 'VII B', 'ok'],
-      [23, 'Siswa Contoh 023', 'DEMO-0023', 'VII B', 'ok'],
-      [24, 'Siswa Contoh 024', 'DEMO-0024', 'VII B', 'ok'],
-      [25, 'Siswa Contoh 025', 'DEMO-0025', 'VII B', 'bad'],
-      [26, 'Siswa Contoh 026', 'DEMO-0026', 'VII B', 'ok'],
-      [27, 'Siswa Contoh 027', 'DEMO-0027', 'VII B', 'ok'],
-      [28, 'Siswa Contoh 028', 'DEMO-0028', 'VII B', 'ok'],
-      [29, 'Siswa Contoh 029', 'DEMO-0029', 'VII B', 'warn'],
-      [30, 'Siswa Contoh 030', 'DEMO-0030', 'VII B', 'ok'],
-      [31, 'Siswa Contoh 031', 'DEMO-0031', 'VII B', 'ok'],
-      [32, 'Siswa Contoh 032', 'DEMO-0032', 'VII B', 'ok'],
-      [33, 'Siswa Contoh 033', 'DEMO-0033', 'VII B', 'ok'],
-      [34, 'Siswa Contoh 034', 'DEMO-0034', 'VII B', 'ok'],
-
-      [35, 'Siswa Contoh 035', 'DEMO-0035', 'VIII A', 'ok'],
-      [36, 'Siswa Contoh 036', 'DEMO-0036', 'VIII A', 'ok'],
-      [37, 'Siswa Contoh 037', 'DEMO-0037', 'VIII A', 'ok'],
-      [38, 'Siswa Contoh 038', 'DEMO-0038', 'VIII A', 'warn'],
-      [39, 'Siswa Contoh 039', 'DEMO-0039', 'VIII A', 'ok'],
-      [40, 'Siswa Contoh 040', 'DEMO-0040', 'VIII A', 'ok'],
-      [41, 'Siswa Contoh 041', 'DEMO-0041', 'VIII A', 'ok'],
-      [42, 'Siswa Contoh 042', 'DEMO-0042', 'VIII A', 'bad'],
-      [43, 'Siswa Contoh 043', 'DEMO-0043', 'VIII A', 'ok'],
-      [44, 'Siswa Contoh 044', 'DEMO-0044', 'VIII A', 'ok'],
-      [45, 'Siswa Contoh 045', 'DEMO-0045', 'VIII A', 'ok'],
-      [46, 'Siswa Contoh 046', 'DEMO-0046', 'VIII A', 'warn'],
-      [47, 'Siswa Contoh 047', 'DEMO-0047', 'VIII A', 'ok'],
-      [48, 'Siswa Contoh 048', 'DEMO-0048', 'VIII A', 'ok'],
-      [49, 'Siswa Contoh 049', 'DEMO-0049', 'VIII A', 'ok'],
-      [50, 'Siswa Contoh 050', 'DEMO-0050', 'VIII A', 'ok'],
-      [51, 'Siswa Contoh 051', 'DEMO-0051', 'VIII A', 'ok'],
-
-      [52, 'Siswa Contoh 052', 'DEMO-0052', 'VIII B', 'ok'],
-      [53, 'Siswa Contoh 053', 'DEMO-0053', 'VIII B', 'warn'],
-      [54, 'Siswa Contoh 054', 'DEMO-0054', 'VIII B', 'ok'],
-      [55, 'Siswa Contoh 055', 'DEMO-0055', 'VIII B', 'ok'],
-      [56, 'Siswa Contoh 056', 'DEMO-0056', 'VIII B', 'ok'],
-      [57, 'Siswa Contoh 057', 'DEMO-0057', 'VIII B', 'bad'],
-      [58, 'Siswa Contoh 058', 'DEMO-0058', 'VIII B', 'ok'],
-      [59, 'Siswa Contoh 059', 'DEMO-0059', 'VIII B', 'ok'],
-      [60, 'Siswa Contoh 060', 'DEMO-0060', 'VIII B', 'warn'],
-      [61, 'Siswa Contoh 061', 'DEMO-0061', 'VIII B', 'ok'],
-      [62, 'Siswa Contoh 062', 'DEMO-0062', 'VIII B', 'ok'],
-      [63, 'Siswa Contoh 063', 'DEMO-0063', 'VIII B', 'ok'],
-      [64, 'Siswa Contoh 064', 'DEMO-0064', 'VIII B', 'ok'],
-      [65, 'Siswa Contoh 065', 'DEMO-0065', 'VIII B', 'ok'],
-      [66, 'Siswa Contoh 066', 'DEMO-0066', 'VIII B', 'ok'],
-      [67, 'Siswa Contoh 067', 'DEMO-0067', 'VIII B', 'ok'],
-      [68, 'Siswa Contoh 068', 'DEMO-0068', 'VIII B', 'ok'],
-
-      [69, 'Siswa Contoh 069', 'DEMO-0069', 'IX A', 'ok'],
-      [70, 'Siswa Contoh 070', 'DEMO-0070', 'IX A', 'ok'],
-      [71, 'Siswa Contoh 071', 'DEMO-0071', 'IX A', 'warn'],
-      [72, 'Siswa Contoh 072', 'DEMO-0072', 'IX A', 'ok'],
-      [73, 'Siswa Contoh 073', 'DEMO-0073', 'IX A', 'ok'],
-      [74, 'Siswa Contoh 074', 'DEMO-0074', 'IX A', 'ok'],
-      [75, 'Siswa Contoh 075', 'DEMO-0075', 'IX A', 'ok'],
-      [76, 'Siswa Contoh 076', 'DEMO-0076', 'IX A', 'bad'],
-      [77, 'Siswa Contoh 077', 'DEMO-0077', 'IX A', 'ok'],
-      [78, 'Siswa Contoh 078', 'DEMO-0078', 'IX A', 'ok'],
-      [79, 'Siswa Contoh 079', 'DEMO-0079', 'IX A', 'ok'],
-      [80, 'Siswa Contoh 080', 'DEMO-0080', 'IX A', 'warn'],
-      [81, 'Siswa Contoh 081', 'DEMO-0081', 'IX A', 'ok'],
-      [82, 'Siswa Contoh 082', 'DEMO-0082', 'IX A', 'ok'],
-      [83, 'Siswa Contoh 083', 'DEMO-0083', 'IX A', 'ok'],
-      [84, 'Siswa Contoh 084', 'DEMO-0084', 'IX A', 'ok'],
-
-      [85, 'Siswa Contoh 085', 'DEMO-0085', 'IX B', 'ok'],
-      [86, 'Siswa Contoh 086', 'DEMO-0086', 'IX B', 'ok'],
-      [87, 'Siswa Contoh 087', 'DEMO-0087', 'IX B', 'warn'],
-      [88, 'Siswa Contoh 088', 'DEMO-0088', 'IX B', 'ok'],
-      [89, 'Siswa Contoh 089', 'DEMO-0089', 'IX B', 'ok'],
-      [90, 'Siswa Contoh 090', 'DEMO-0090', 'IX B', 'ok'],
-      [91, 'Siswa Contoh 091', 'DEMO-0091', 'IX B', 'bad'],
-      [92, 'Siswa Contoh 092', 'DEMO-0092', 'IX B', 'ok'],
-      [93, 'Siswa Contoh 093', 'DEMO-0093', 'IX B', 'ok'],
-      [94, 'Siswa Contoh 094', 'DEMO-0094', 'IX B', 'ok'],
-      [95, 'Siswa Contoh 095', 'DEMO-0095', 'IX B', 'warn'],
-      [96, 'Siswa Contoh 096', 'DEMO-0096', 'IX B', 'ok'],
-      [97, 'Siswa Contoh 097', 'DEMO-0097', 'IX B', 'ok'],
-      [98, 'Siswa Contoh 098', 'DEMO-0098', 'IX B', 'ok'],
-      [99, 'Siswa Contoh 099', 'DEMO-0099', 'IX B', 'ok'],
-      [100, 'Siswa Contoh 100', 'DEMO-0100', 'IX B', 'ok']
-    ];
-
-    for (const [id, nama, nisn, kelas, status_dokumen] of studentsData) {
-      const idKelas = await ensureKelas(kelas);
-      await pool.query(
-        `INSERT INTO siswa (id, id_siswa, nama, nama_lengkap, nama_siswa, nisn, nis, kelas, id_kelas, status_dokumen)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE
-           nama = VALUES(nama),
-           nama_lengkap = VALUES(nama_lengkap),
-           nama_siswa = VALUES(nama_siswa),
-           nisn = VALUES(nisn),
-           nis = VALUES(nis),
-           kelas = VALUES(kelas),
-           id_kelas = VALUES(id_kelas),
-           status_dokumen = VALUES(status_dokumen)`,
-        [id, id, nama, nama, nama, nisn, nisn, kelas, idKelas, status_dokumen]
-      );
-    }
-
-    await pool.query(`
-      INSERT IGNORE INTO kelas (nama_kelas, tingkat, tahun_ajaran)
-      SELECT DISTINCT kelas, SUBSTRING_INDEX(kelas, ' ', 1), '2026' FROM siswa
-    `);
-
-    await writeActivity('Data 100 siswa per kelas disinkronisasi ke MySQL');
-    res.json({ message: '100 data siswa berhasil dimasukkan/disinkronkan ke database MySQL arsip_siswa', count: 100 });
-  } catch(err) {
     res.status(500).json({ error: err.message });
   }
 });
