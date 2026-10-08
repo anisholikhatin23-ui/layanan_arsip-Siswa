@@ -57,10 +57,15 @@ app.get('/logo.png', (req, res) => res.sendFile(path.join(__dirname, 'logo.png')
 app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
-    res.json({ status: 'ok', mysql: 'connected' });
+    const googleDrive = await getGoogleDriveStatus();
+    res.json({
+      status: googleDrive === 'connected' ? 'ok' : 'partial',
+      mysql: 'connected',
+      googleDrive
+    });
   } catch (err) {
     console.error('Health check gagal mengakses MySQL:', err);
-    res.status(503).json({ status: 'error', mysql: 'disconnected' });
+    res.status(503).json({ status: 'error', mysql: 'disconnected', googleDrive: 'unchecked' });
   }
 });
 
@@ -83,6 +88,10 @@ const upload = multer({
 
 function isDriveConfigured() {
   return Boolean(DRIVE_FOLDER_ID && (process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_SERVICE_ACCOUNT_FILE));
+}
+
+function isRailwayDeployment() {
+  return Boolean(process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_PROJECT_ID);
 }
 
 function getDriveClient() {
@@ -109,6 +118,20 @@ function getDriveClient() {
   return drive;
 }
 
+async function getGoogleDriveStatus() {
+  if (!isDriveConfigured()) return 'not_configured';
+  try {
+    const response = await getDriveClient().files.get({
+      fileId: DRIVE_FOLDER_ID,
+      fields: 'id,mimeType'
+    });
+    return response.data.mimeType === 'application/vnd.google-apps.folder' ? 'connected' : 'invalid_folder';
+  } catch (err) {
+    console.error('Health check gagal mengakses Google Drive:', err.message);
+    return 'unavailable';
+  }
+}
+
 async function uploadToDrive(file) {
   const driveClient = getDriveClient();
   const safeName = path.basename(file.originalname).replace(/[^\w.-]/g, '_');
@@ -126,6 +149,25 @@ async function uploadToDrive(file) {
     fields: 'id,name,mimeType'
   });
   return response.data;
+}
+
+async function saveDocumentFile(file) {
+  if (!isDriveConfigured()) {
+    if (isRailwayDeployment()) {
+      throw new Error('Google Drive belum dikonfigurasi. File tidak disimpan ke disk sementara Railway.');
+    }
+    return { driveFile: null, localFile: saveFileLocally(file) };
+  }
+
+  try {
+    return { driveFile: await uploadToDrive(file), localFile: null };
+  } catch (err) {
+    if (isRailwayDeployment()) {
+      throw new Error(`Gagal mengunggah file ke Google Drive: ${err.message}`);
+    }
+    console.warn('⚠️ Gagal upload ke Google Drive, dialihkan ke penyimpanan lokal /uploads:', err.message);
+    return { driveFile: null, localFile: saveFileLocally(file) };
+  }
 }
 
 function saveFileLocally(file) {
@@ -146,12 +188,9 @@ function saveFileLocally(file) {
 }
 
 async function deleteDriveFile(fileId) {
-  if (!fileId || !isDriveConfigured()) return;
-  try {
-    await getDriveClient().files.delete({ fileId, supportsAllDrives: true });
-  } catch (err) {
-    console.warn(`Gagal menghapus file Google Drive ${fileId}:`, err.message);
-  }
+  if (!fileId) return;
+  if (!isDriveConfigured()) throw new Error('Google Drive belum dikonfigurasi; file Drive tidak dapat dihapus.');
+  await getDriveClient().files.delete({ fileId, supportsAllDrives: true });
 }
 
 // Inisialisasi Database MySQL (Auto-Create Database & Tables)
@@ -1295,16 +1334,18 @@ app.delete('/api/siswa/:id', async (req, res) => {
     const siswaNama = siswaRows.length ? siswaRows[0].nama : `ID ${id}`;
     const [documents] = await pool.query('SELECT drive_file_id FROM dokumen WHERE siswa_id = ?', [id]);
 
-    await pool.query('DELETE FROM dokumen WHERE siswa_id = ?', [id]);
-    await pool.query('DELETE FROM siswa WHERE id = ?', [id]);
     for (const document of documents) {
       if (!document.drive_file_id) continue;
       try {
         await deleteDriveFile(document.drive_file_id);
       } catch (driveError) {
-        console.error(`Siswa ${id} dihapus, tetapi file Drive ${document.drive_file_id} gagal dihapus:`, driveError);
+        console.error(`Gagal menghapus file Drive ${document.drive_file_id} milik siswa ${id}:`, driveError);
+        return res.status(502).json({ error: 'File Drive gagal dihapus; data siswa di MySQL tidak dihapus.' });
       }
     }
+
+    await pool.query('DELETE FROM dokumen WHERE siswa_id = ?', [id]);
+    await pool.query('DELETE FROM siswa WHERE id = ?', [id]);
 
     await writeActivity(`Data siswa "${siswaNama}" beserta dokumennya dihapus dari MySQL`);
 
@@ -1363,16 +1404,9 @@ app.post('/api/dokumen', upload.single('file'), async (req, res) => {
     }
 
     if (req.file) {
-      if (isDriveConfigured()) {
-        try {
-          uploadedDriveFile = await uploadToDrive(req.file);
-        } catch (driveErr) {
-          console.warn('⚠️ Gagal upload ke Google Drive, dialihkan ke penyimpanan lokal /uploads:', driveErr.message);
-          localSavedFile = saveFileLocally(req.file);
-        }
-      } else {
-        localSavedFile = saveFileLocally(req.file);
-      }
+      const storedFile = await saveDocumentFile(req.file);
+      uploadedDriveFile = storedFile.driveFile;
+      localSavedFile = storedFile.localFile;
     }
 
     const idKategori = await ensureKategori(kategori);
@@ -1410,7 +1444,11 @@ app.post('/api/dokumen', upload.single('file'), async (req, res) => {
     });
   } catch (err) {
     if (uploadedDriveFile && !documentSaved) {
-      try { await deleteDriveFile(uploadedDriveFile.id); } catch (cleanupError) {}
+      try {
+        await deleteDriveFile(uploadedDriveFile.id);
+      } catch (cleanupError) {
+        console.error(`Gagal membersihkan file Drive ${uploadedDriveFile.id} setelah penyimpanan dokumen gagal:`, cleanupError);
+      }
     }
     console.error('Gagal menyimpan dokumen:', err);
     res.status(500).json({ error: err.message });
@@ -1431,16 +1469,9 @@ app.put('/api/dokumen/:id', upload.single('file'), async (req, res) => {
     if (existingRows.length === 0) return res.status(404).json({ error: 'Dokumen tidak ditemukan' });
 
     if (req.file) {
-      if (isDriveConfigured()) {
-        try {
-          uploadedDriveFile = await uploadToDrive(req.file);
-        } catch (driveErr) {
-          console.warn('⚠️ Gagal upload ke Google Drive, dialihkan ke penyimpanan lokal /uploads:', driveErr.message);
-          localSavedFile = saveFileLocally(req.file);
-        }
-      } else {
-        localSavedFile = saveFileLocally(req.file);
-      }
+      const storedFile = await saveDocumentFile(req.file);
+      uploadedDriveFile = storedFile.driveFile;
+      localSavedFile = storedFile.localFile;
     }
 
     const idKategori = await ensureKategori(kategori);
@@ -1467,7 +1498,11 @@ app.put('/api/dokumen/:id', upload.single('file'), async (req, res) => {
       documentSaved = true;
 
       if (uploadedDriveFile && existingRows[0].drive_file_id) {
-        deleteDriveFile(existingRows[0].drive_file_id);
+        try {
+          await deleteDriveFile(existingRows[0].drive_file_id);
+        } catch (driveError) {
+          console.error(`Metadata dokumen ${id} diperbarui, tetapi file Drive lama gagal dihapus:`, driveError);
+        }
       }
       if (localSavedFile && existingRows[0].file_url && existingRows[0].file_url.startsWith('/uploads/')) {
         const oldPath = path.join(__dirname, existingRows[0].file_url);
@@ -1497,7 +1532,11 @@ app.put('/api/dokumen/:id', upload.single('file'), async (req, res) => {
     });
   } catch (err) {
     if (uploadedDriveFile && !documentSaved) {
-      try { await deleteDriveFile(uploadedDriveFile.id); } catch (cleanupError) {}
+      try {
+        await deleteDriveFile(uploadedDriveFile.id);
+      } catch (cleanupError) {
+        console.error(`Gagal membersihkan file Drive ${uploadedDriveFile.id} setelah pembaruan dokumen gagal:`, cleanupError);
+      }
     }
     console.error('Gagal memperbarui dokumen:', err);
     res.status(500).json({ error: err.message });
@@ -1560,15 +1599,15 @@ app.delete('/api/dokumen/:id', async (req, res) => {
     const { id } = req.params;
     const [rows] = await pool.query('SELECT drive_file_id FROM dokumen WHERE id = ?', [id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Dokumen tidak ditemukan' });
-    await pool.query('DELETE FROM dokumen WHERE id = ?', [id]);
     if (rows[0].drive_file_id) {
       try {
         await deleteDriveFile(rows[0].drive_file_id);
       } catch (driveError) {
-        console.error(`Dokumen ${id} dihapus dari MySQL, tetapi file Drive gagal dihapus:`, driveError);
-        return res.status(502).json({ error: 'Dokumen dihapus dari database, tetapi file Drive gagal dihapus' });
+        console.error(`Gagal menghapus file Drive dokumen ${id}:`, driveError);
+        return res.status(502).json({ error: 'File Drive gagal dihapus; data dokumen di MySQL tidak dihapus.' });
       }
     }
+    await pool.query('DELETE FROM dokumen WHERE id = ?', [id]);
     await writeActivity(`Dokumen ID ${id} dihapus dari arsip`);
     res.json({ message: 'Dokumen berhasil dihapus' });
   } catch (err) {
@@ -1594,32 +1633,24 @@ app.post('/api/backup/trigger', async (req, res) => {
     const connection = await pool.getConnection();
     let backupId;
     const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
-    const message = 'Backup manual berhasil diselesaikan. Data MySQL dan Google Drive tersinkronisasi.';
+    const message = 'Permintaan backup tercatat. Salinan database dan sinkronisasi Google Drive belum dijalankan otomatis.';
     try {
       await connection.beginTransaction();
       const [backupResult] = await connection.query(
         `INSERT INTO backup (id_jadwal, id_pengguna, tipe_backup, waktu_mulai, status_backup)
-         VALUES (?, ?, 'manual', NOW(), 'selesai')`,
+         VALUES (?, ?, 'manual', NOW(), 'menunggu')`,
         [id_jadwal || null, id_pengguna || null]
       );
       backupId = backupResult.insertId;
-      const [storagePoints] = await connection.query('SELECT id_titik FROM titik_penyimpanan');
-      for (const point of storagePoints) {
-        await connection.query(
-          `INSERT INTO detail_sinkron (id_backup, id_titik, waktu_sinkron, status_sinkron)
-           VALUES (?, ?, NOW(), 'berhasil')`,
-          [backupId, point.id_titik]
-        );
-      }
       await connection.query(
         `INSERT INTO log_aktivitas
          (waktu, teks, id_pengguna, waktu_aktivitas, jenis_aktivitas, keterangan)
          VALUES (?, ?, ?, NOW(), 'backup', ?)`,
         [
           timestamp,
-          `Backup manual #${backupId} berhasil diselesaikan. Tersinkronisasi ke 3 titik penyimpanan.`,
+          `Permintaan backup manual #${backupId} tercatat; salinan database dan Drive belum dibuat otomatis.`,
           id_pengguna || null,
-          `Backup manual #${backupId} berhasil diselesaikan. Tersinkronisasi ke 3 titik penyimpanan.`
+          `Permintaan backup manual #${backupId} tercatat; salinan database dan Drive belum dibuat otomatis.`
         ]
       );
       await connection.commit();
@@ -1629,10 +1660,10 @@ app.post('/api/backup/trigger', async (req, res) => {
     } finally {
       connection.release();
     }
-    res.status(200).json({
+    res.status(202).json({
       success: true,
       id_backup: backupId,
-      status_backup: 'selesai',
+      status_backup: 'menunggu',
       timestamp,
       message
     });

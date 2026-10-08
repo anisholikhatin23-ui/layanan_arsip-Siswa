@@ -65,9 +65,9 @@ GitHub Pages hanya menyajikan frontend statis; ia tidak menjalankan Node.js atau
 1. Buat project di Railway, tambahkan service MySQL, lalu deploy service Node.js dari repository ini. File `railway.toml` mengatur `npm start`, health check `/health`, dan restart otomatis.
 2. Hubungkan service Node.js dan MySQL pada project/environment Railway yang sama. Backend memprioritaskan variabel MySQL Railway `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, dan `MYSQLDATABASE`; pasangan `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, dan `DB_NAME` menjadi fallback untuk koneksi lokal atau pengaturan manual. Jangan isi host online dengan `localhost`. Akun database harus punya izin membuat tabel di database yang dipilih.
 3. Isi `INITIAL_ADMIN_USERNAME`, `INITIAL_ADMIN_NAME`, `INITIAL_ADMIN_PASSWORD`, dan `FRONTEND_ORIGINS` di Variables service Node.js. Untuk GitHub Pages, origin frontend adalah `https://anisholikhatin23-ui.github.io` (tanpa nama repository dan tanpa garis miring di akhir). Isi rahasia hanya di dashboard Railway, jangan di GitHub atau chat.
-4. Isi `GOOGLE_DRIVE_FOLDER_ID` dan kredensial Google Drive di environment Railway sebelum mengunggah berkas siswa.
+4. Isi `GOOGLE_DRIVE_FOLDER_ID` dan `GOOGLE_SERVICE_ACCOUNT_JSON` di Variables service Node.js. Gunakan isi JSON service account sebagai secret Railway, jangan mengunggah file kunci ke Git. Bagikan folder tujuan kepada email service account dengan izin Editor.
 5. Setelah Railway menyediakan domain backend HTTPS, isi konstanta `API_BASE_URL` di `index.html` dengan origin tersebut, misalnya `https://nama-service.up.railway.app`, lalu commit/push perubahan agar GitHub Pages menerbitkan frontend.
-6. Pada deploy pertama, backend membuat tabel dan data contoh otomatis di database yang dipilih, serta membuat akun admin berdasarkan variabel `INITIAL_ADMIN_*`. Login menggunakan username dan kata sandi yang Anda atur sendiri di Railway. Endpoint `https://<domain-backend>/health` dapat dipakai untuk memastikan backend dan MySQL tersambung.
+6. Pada deploy pertama, backend membuat tabel dan data contoh otomatis di database yang dipilih, serta membuat akun admin berdasarkan variabel `INITIAL_ADMIN_*`. Login menggunakan username dan kata sandi yang Anda atur sendiri di Railway. Endpoint `https://<domain-backend>/health` mengembalikan status MySQL dan Google Drive; pastikan `mysql` dan `googleDrive` sama-sama bernilai `connected`. File unggahan di Railway tidak dialihkan diam-diam ke disk sementara jika Drive belum tersedia.
 
 Jangan memasukkan data siswa sungguhan sebelum langkah-langkah tersebut selesai dan sudah diuji. Penyimpanan lokal browser bukan database bersama dan tidak tersinkron antarperangkat.
 
@@ -101,9 +101,9 @@ Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubu
 | **GET, POST** | `/api/titik-penyimpanan` | Membaca dan menambah titik penyimpanan |
 | **GET** | `/api/backup` | Mengambil catatan permintaan backup |
 | **GET, POST** | `/api/backup/:id/detail-sinkron` | Membaca dan mencatat status sinkronisasi per titik penyimpanan |
-| **POST** | `/api/backup/trigger` | Mencatat permintaan backup dan status titik tujuan |
+| **POST** | `/api/backup/trigger` | Mencatat permintaan backup (belum membuat salinan) |
 
-**Batasan backup:** endpoint pemicu saat ini baru mencatat permintaan dengan status `menunggu`; endpoint tersebut belum membuat salinan database atau menyinkronkan file secara otomatis. UI tidak lagi melaporkan permintaan itu sebagai backup yang berhasil dijalankan.
+**Batasan backup:** endpoint pemicu hanya mencatat permintaan dengan status `menunggu`; endpoint tersebut belum membuat salinan database atau menyinkronkan file secara otomatis. Permintaan tidak ditampilkan sebagai backup selesai dan tidak membuat catatan sinkronisasi tujuan palsu.
 
 ---
 
