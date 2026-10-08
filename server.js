@@ -14,11 +14,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Config MySQL
-const DB_HOST = process.env.DB_HOST || 'localhost';
-const DB_USER = process.env.DB_USER || 'root';
-const DB_PASSWORD = process.env.DB_PASSWORD || '';
-const DB_NAME = process.env.DB_NAME || 'arsip_siswa';
-const DB_PORT = process.env.DB_PORT || 3306;
+const DB_HOST = process.env.MYSQLHOST || process.env.DB_HOST || 'localhost';
+const DB_USER = process.env.MYSQLUSER || process.env.DB_USER || 'root';
+const DB_PASSWORD = process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '';
+const DB_NAME = process.env.MYSQLDATABASE || process.env.DB_NAME || 'arsip_siswa';
+const DB_PORT = process.env.MYSQLPORT || process.env.DB_PORT || 3306;
 const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
 const scrypt = promisify(crypto.scrypt);
