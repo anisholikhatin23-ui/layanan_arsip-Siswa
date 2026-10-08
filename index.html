@@ -1358,7 +1358,8 @@ function renderSiswa() {
   });
 
   const html = kelasList().map(k => {
-    const list = filtered.filter(s => s.kelas === k).sort((a, b) => a.nama.localeCompare(b.nama));
+    const list = filtered.filter(s => s.kelas === k)
+      .sort((a, b) => a.nisn.localeCompare(b.nisn, undefined, { numeric: true }) || a.nama.localeCompare(b.nama));
     if (!list.length) return '';
     const st = kelasStats(k);
     let out = groupRow('siswa', k, 'Kelas ' + k, list.length, 'siswa', `${st.pct}% dokumen wajib lengkap`, 5);
