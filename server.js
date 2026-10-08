@@ -441,9 +441,7 @@ async function initMySQL() {
         `INSERT INTO pengguna_tu (nama_lengkap, username, kata_sandi, jabatan)
          VALUES (?, ?, ?, 'Administrator')
          ON DUPLICATE KEY UPDATE
-            nama_lengkap = VALUES(nama_lengkap),
-            kata_sandi = VALUES(kata_sandi),
-            jabatan = VALUES(jabatan)`,
+            username = VALUES(username)`,
         [process.env.INITIAL_ADMIN_NAME?.trim() || bootstrapUsername, bootstrapUsername,
           `scrypt$${salt}$${passwordHash.toString('hex')}`]
       );
@@ -503,7 +501,7 @@ async function initMySQL() {
     await ensureForeignKey('detail_sinkron', 'fk_sinkron_titik', 'id_titik', 'titik_penyimpanan', 'id_titik', 'RESTRICT');
 
     // Insert the canonical roster before seeding documents that refer to students.
-    await syncSeededStudents();
+    await syncSeededStudents(true);
 
     // Seed data dokumen sampel jika tabel dokumen masih kosong
     const [docRows] = await pool.query('SELECT COUNT(*) AS total FROM dokumen');

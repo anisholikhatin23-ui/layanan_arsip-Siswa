@@ -47,7 +47,7 @@ GOOGLE_DRIVE_FOLDER_ID=your_google_drive_folder_id
 GOOGLE_SERVICE_ACCOUNT_FILE=C:\path\to\service-account.json
 ```
 
-Atur `INITIAL_ADMIN_PASSWORD` dengan kata sandi kuat. Saat server berjalan, akun admin di `pengguna_tu` dibuat atau diperbarui dengan hash scrypt; kata sandi tidak disimpan sebagai teks biasa. Endpoint API memerlukan sesi login yang berlaku 8 jam. Token sesi hanya disimpan di memori tab browser, sehingga setelah browser dimuat ulang staf perlu login kembali. Jangan gunakan kembali kata sandi pribadi.
+Atur `INITIAL_ADMIN_PASSWORD` dengan kata sandi kuat. Saat server berjalan, akun admin di `pengguna_tu` dibuat jika belum ada dengan hash scrypt; kata sandi admin yang sudah ada tidak ditimpa saat backend restart. Kata sandi tidak disimpan sebagai teks biasa. Endpoint API memerlukan sesi login yang berlaku 8 jam. Token sesi hanya disimpan di memori tab browser, sehingga setelah browser dimuat ulang staf perlu login kembali. Jangan gunakan kembali kata sandi pribadi.
 
 ### 3. Hubungkan folder Google Drive
 1. Aktifkan Google Drive API pada proyek Google Cloud sekolah dan buat service account.
