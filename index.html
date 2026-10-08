@@ -773,6 +773,7 @@
 <input type="file" id="quick-file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style="display:none;" />
 <div class="toast" id="toast"></div>
 
+<script src="student-data.js"></script>
 <script>
 // =====================================================================
 //  KONSTANTA
@@ -795,7 +796,7 @@ let currentPrintSiswaId = null;
 let selectedPrintDocIds = new Set();
 let suratLegalisir = [];
 
-let siswa = [
+let legacySiswa = [
   // KELAS VII A (17 Siswa)
   ['Siswa Contoh 001', 'DEMO-0001', 'VII A'],
   ['Siswa Contoh 002', 'DEMO-0002', 'VII A'],
@@ -908,6 +909,7 @@ let siswa = [
   ['Siswa Contoh 099', 'DEMO-0099', 'IX B'],
   ['Siswa Contoh 100', 'DEMO-0100', 'IX B'],
 ].map((r, i) => ({ id: i + 1, nama: r[0], nisn: r[1], kelas: r[2] }));
+let siswa = STUDENT_SEED_DATA.map((r, i) => ({ id: i + 1, nama: r[0], nisn: r[1], kelas: r[2] }));
 
 let documents = [];
 function seedDoc(siswaId, kategori, judul, tahun, jenis, status) {
@@ -955,6 +957,10 @@ function seedDoc(siswaId, kategori, judul, tahun, jenis, status) {
   [null, 'Surat masuk/keluar', 'Surat Undangan Wali Murid 2026', '2026', 'Fisik + Digital', 'ok'],
   [null, 'Organisasi', 'SK Pembina Pramuka SMP Muh 1', '2025', 'Fisik', 'warn'],
 ].forEach(r => seedDoc(...r));
+documents.forEach(doc => {
+  const student = siswa.find(item => item.id === doc.siswaId);
+  if (student) doc.judul = doc.judul.replace(/Siswa Contoh \d+/, student.nama);
+});
 
 let activity = [
   { t: '09:02 WIB', text: 'Google Drive tersinkronisasi otomatis' },

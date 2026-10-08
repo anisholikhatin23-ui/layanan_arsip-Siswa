@@ -13,7 +13,7 @@ Aplikasi Pengelolaan Dokumen Administrasi Siswa terintegrasi dengan Database MyS
    ```sql
    CREATE DATABASE IF NOT EXISTS arsip_siswa;
    ```
-4. Buat database MySQL `arsip_siswa` dan impor struktur tabel dari `schema.sql`, atau buat database kosong bernama `arsip_siswa`; server membuat tabel dan data contoh saat pertama kali dijalankan.
+4. Buat database MySQL `arsip_siswa` dan impor struktur tabel dari `schema.sql`, atau buat database kosong bernama `arsip_siswa`; server membuat tabel saat pertama kali dijalankan.
 
 Skema mencakup entitas pada ERD pengelolaan arsip serta backup/sinkronisasi. Saat server dijalankan, kolom dan tabel ERD yang belum ada ditambahkan tanpa menghapus kolom lama; data kelas dan kategori dari tabel lama juga dinormalisasi ke tabel relasinya.
 Nama primary key lama (`id`) pada tabel siswa, dokumen, dan log dipertahankan agar endpoint dan data yang sudah ada tetap kompatibel; kolom foreign key dan relasi ERD ditambahkan.
@@ -67,7 +67,7 @@ GitHub Pages hanya menyajikan frontend statis; ia tidak menjalankan Node.js atau
 3. Isi `INITIAL_ADMIN_USERNAME`, `INITIAL_ADMIN_NAME`, `INITIAL_ADMIN_PASSWORD`, dan `FRONTEND_ORIGINS` di Variables service Node.js. Untuk GitHub Pages, origin frontend adalah `https://anisholikhatin23-ui.github.io` (tanpa nama repository dan tanpa garis miring di akhir). Isi rahasia hanya di dashboard Railway, jangan di GitHub atau chat.
 4. Isi `GOOGLE_DRIVE_FOLDER_ID` dan `GOOGLE_SERVICE_ACCOUNT_JSON` di Variables service Node.js. Gunakan isi JSON service account sebagai secret Railway, jangan mengunggah file kunci ke Git. Bagikan folder tujuan kepada email service account dengan izin Editor.
 5. Setelah Railway menyediakan domain backend HTTPS, isi konstanta `API_BASE_URL` di `index.html` dengan origin tersebut, misalnya `https://nama-service.up.railway.app`, lalu commit/push perubahan agar GitHub Pages menerbitkan frontend.
-6. Pada deploy pertama, backend membuat tabel dan data contoh otomatis di database yang dipilih, serta membuat akun admin berdasarkan variabel `INITIAL_ADMIN_*`. Login menggunakan username dan kata sandi yang Anda atur sendiri di Railway. Endpoint `https://<domain-backend>/health` mengembalikan status MySQL dan Google Drive; pastikan `mysql` dan `googleDrive` sama-sama bernilai `connected`. File unggahan di Railway tidak dialihkan diam-diam ke disk sementara jika Drive belum tersedia.
+6. Pada deploy, backend menyinkronkan 100 data siswa dari `student-data.js` (VII A/B, VIII A/B, IX A/B) ke MySQL. Baris demo `Siswa Contoh`/`DEMO-*` diperbarui; data siswa lain tidak dihapus. Backend juga membuat akun admin berdasarkan variabel `INITIAL_ADMIN_*`. Login menggunakan username dan kata sandi yang Anda atur sendiri di Railway. Endpoint `https://<domain-backend>/health` mengembalikan status MySQL dan Google Drive; pastikan `mysql` dan `googleDrive` sama-sama bernilai `connected`. File unggahan di Railway tidak dialihkan diam-diam ke disk sementara jika Drive belum tersedia.
 
 Jangan memasukkan data siswa sungguhan sebelum langkah-langkah tersebut selesai dan sudah diuji. Penyimpanan lokal browser bukan database bersama dan tidak tersinkron antarperangkat.
 

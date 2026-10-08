@@ -8,6 +8,7 @@ const { Readable } = require('stream');
 const multer = require('multer');
 const mysql = require('mysql2/promise');
 const { google } = require('googleapis');
+const STUDENT_SEED_DATA = require('./student-data');
 require('dotenv').config();
 
 const app = express();
@@ -664,13 +665,7 @@ async function initMySQL() {
     }
 
     // Ensure class groupings for sample 100 students (VII A, VII B, VIII A, VIII B, IX A, IX B)
-    await pool.query("UPDATE siswa SET kelas='VII A' WHERE (id BETWEEN 1 AND 17 OR id_siswa BETWEEN 1 AND 17) AND nisn LIKE '007%'");
-    await pool.query("UPDATE siswa SET kelas='VII B' WHERE (id BETWEEN 18 AND 34 OR id_siswa BETWEEN 18 AND 34) AND nisn LIKE '007%'");
-    await pool.query("UPDATE siswa SET kelas='VIII A' WHERE (id BETWEEN 35 AND 51 OR id_siswa BETWEEN 35 AND 51) AND nisn LIKE '006%'");
-    await pool.query("UPDATE siswa SET kelas='VIII B' WHERE (id BETWEEN 52 AND 68 OR id_siswa BETWEEN 52 AND 68) AND nisn LIKE '006%'");
-    await pool.query("UPDATE siswa SET kelas='IX A' WHERE (id BETWEEN 69 AND 84 OR id_siswa BETWEEN 69 AND 84) AND nisn LIKE '005%'");
-    await pool.query("UPDATE siswa SET kelas='IX B' WHERE (id BETWEEN 85 AND 100 OR id_siswa BETWEEN 85 AND 100) AND nisn LIKE '005%'");
-
+    await syncSeededStudents();
     await pool.query(`
       INSERT IGNORE INTO kelas (nama_kelas, tingkat, tahun_ajaran)
       SELECT DISTINCT kelas, SUBSTRING_INDEX(kelas, ' ', 1), '2026' FROM siswa
@@ -1092,6 +1087,45 @@ async function ensureKelas(namaKelas) {
   return rows[0].id_kelas;
 }
 
+async function syncSeededStudents(force = false) {
+  for (const [index, [nama, nisn, kelas]] of STUDENT_SEED_DATA.entries()) {
+    const legacyNisn = `DEMO-${String(index + 1).padStart(4, '0')}`;
+    let [rows] = await pool.query('SELECT id_siswa, nama, nisn FROM siswa WHERE nisn = ? LIMIT 1', [nisn]);
+    if (!rows.length) {
+      [rows] = await pool.query(
+        'SELECT id_siswa, nama, nisn FROM siswa WHERE nisn = ? AND nama LIKE ? LIMIT 1',
+        [legacyNisn, 'Siswa Contoh %']
+      );
+    }
+    const idKelas = await ensureKelas(kelas);
+    if (rows.length) {
+      await pool.query(
+        `UPDATE siswa
+         SET nama = ?, nama_lengkap = ?, nama_siswa = ?, nisn = ?, nis = ?,
+             kelas = ?, id_kelas = ?, id = COALESCE(id, id_siswa)
+         WHERE id_siswa = ?
+           AND (? = 1 OR nama LIKE 'Siswa Contoh %' OR nisn LIKE 'DEMO-%')`,
+        [nama, nama, nama, nisn, nisn, kelas, idKelas, rows[0].id_siswa, Number(force)]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO siswa
+         (nama, nama_lengkap, nama_siswa, nisn, nis, kelas, id_kelas, status_dokumen)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'ok')`,
+        [nama, nama, nama, nisn, nisn, kelas, idKelas]
+      );
+    }
+    const legacyName = `Siswa Contoh ${String(index + 1).padStart(3, '0')}`;
+    await pool.query(
+      `UPDATE dokumen
+       SET nama_dokumen = REPLACE(COALESCE(NULLIF(nama_dokumen, ''), nama), ?, ?),
+           nama = REPLACE(nama, ?, ?)
+       WHERE nama LIKE ?`,
+      [legacyName, nama, legacyName, nama, `%${legacyName}%`]
+    );
+  }
+}
+
 async function ensureKategori(namaKategori) {
   await pool.query('INSERT IGNORE INTO kategori_dokumen (nama_kategori) VALUES (?)', [namaKategori]);
   const [rows] = await pool.query('SELECT id_kategori FROM kategori_dokumen WHERE nama_kategori = ?', [namaKategori]);
@@ -1136,8 +1170,21 @@ app.get('/api/siswa', async (req, res) => {
   }
 });
 
-// POST /api/siswa/reseed — Sinkronisasi / Masukkan 100 Data Siswa per Kelas ke MySQL
+// POST /api/siswa/reseed — Sinkronisasi data siswa yang sudah ditetapkan ke MySQL
 app.post('/api/siswa/reseed', async (req, res) => {
+  try {
+    await syncSeededStudents(true);
+    await writeActivity('Data siswa dari 6 kelas disinkronisasi ke MySQL');
+    res.json({
+      message: '100 data siswa berhasil dimasukkan/disinkronkan ke database MySQL',
+      count: STUDENT_SEED_DATA.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/siswa/reseed-legacy', async (req, res) => {
   try {
     const studentsData = [
       [1, 'Siswa Contoh 001', 'DEMO-0001', 'VII A', 'ok'],
