@@ -35,14 +35,20 @@ let pool;
 let drive;
 
 // Middleware
-app.use(cors({
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
-    callback(new Error('Origin tidak diizinkan'));
-  },
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-}));
+app.use((req, res, next) => {
+  const forwardedProtocol = req.get('x-forwarded-proto')?.split(',')[0].trim();
+  const requestOrigin = `${forwardedProtocol || req.protocol}://${req.get('host')}`;
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.has(origin) || origin === requestOrigin) {
+        return callback(null, true);
+      }
+      callback(new Error('Origin tidak diizinkan'));
+    },
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+  })(req, res, next);
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
