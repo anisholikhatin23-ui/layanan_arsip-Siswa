@@ -26,9 +26,13 @@ const scrypt = promisify(crypto.scrypt);
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000;
 const loginAttempts = new Map();
 const allowedOrigins = new Set(
-  (process.env.FRONTEND_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,https://anisholikhatin23-ui.github.io')
-    .split(',')
-    .map(origin => origin.trim())
+  [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://anisholikhatin23-ui.github.io',
+    ...(process.env.FRONTEND_ORIGINS || '').split(',')
+  ]
+    .map(origin => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean)
 );
 
