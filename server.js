@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const { promisify } = require('util');
 const { Readable } = require('stream');
 const multer = require('multer');
 const mysql = require('mysql2/promise');
@@ -19,18 +21,33 @@ const DB_NAME = process.env.DB_NAME || 'arsip_siswa';
 const DB_PORT = process.env.DB_PORT || 3306;
 const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
+const scrypt = promisify(crypto.scrypt);
+const SESSION_DURATION_MS = 8 * 60 * 60 * 1000;
+const loginAttempts = new Map();
+const allowedOrigins = new Set(
+  (process.env.FRONTEND_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,https://anisholikhatin23-ui.github.io')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean)
+);
 
 let pool;
 let drive;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    callback(new Error('Origin tidak diizinkan'));
+  },
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend & file uploads
-app.use(express.static(__dirname));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/logo.png', (req, res) => res.sendFile(path.join(__dirname, 'logo.png')));
 
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
   fs.mkdirSync(path.join(__dirname, 'uploads'));
@@ -125,18 +142,6 @@ async function deleteDriveFile(fileId) {
 // Inisialisasi Database MySQL (Auto-Create Database & Tables)
 async function initMySQL() {
   try {
-    // 1. Koneksi awal tanpa memilih database untuk memastikan database 'arsip_siswa' ada
-    const tempConn = await mysql.createConnection({
-      host: DB_HOST,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      port: DB_PORT
-    });
-
-    await tempConn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-    await tempConn.end();
-
-    // 2. Buat Connection Pool ke database 'arsip_siswa'
     pool = mysql.createPool({
       host: DB_HOST,
       user: DB_USER,
@@ -147,6 +152,7 @@ async function initMySQL() {
       connectionLimit: 10,
       queueLimit: 0
     });
+    await pool.query('SELECT 1');
 
     console.log(`✅ Terhubung ke database MySQL: ${DB_NAME} di ${DB_HOST}:${DB_PORT}`);
 
@@ -292,6 +298,15 @@ async function initMySQL() {
         jabatan VARCHAR(100) NULL,
         nip VARCHAR(50) NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+      `CREATE TABLE IF NOT EXISTS sesi_tu (
+        token_hash CHAR(64) PRIMARY KEY,
+        id_pengguna INT NOT NULL,
+        expires_at DATETIME NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_sesi_tu_expiration (expires_at),
+        CONSTRAINT fk_sesi_tu_pengguna FOREIGN KEY (id_pengguna)
+          REFERENCES pengguna_tu(id_pengguna) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
       `CREATE TABLE IF NOT EXISTS surat_legalisir (
         id_legalisir INT AUTO_INCREMENT PRIMARY KEY,
         id_siswa INT NOT NULL,
@@ -362,6 +377,25 @@ async function initMySQL() {
       ['kata_sandi', 'VARCHAR(255) NULL'],
       ['nip', 'VARCHAR(50) NULL']
     ]);
+    const bootstrapUsername = process.env.INITIAL_ADMIN_USERNAME?.trim();
+    const bootstrapPassword = process.env.INITIAL_ADMIN_PASSWORD;
+    if (bootstrapUsername && bootstrapPassword) {
+      const salt = crypto.randomBytes(16).toString('hex');
+      const passwordHash = await scrypt(bootstrapPassword, salt, 64);
+      await pool.query(
+        `INSERT INTO pengguna_tu (nama_lengkap, username, kata_sandi, jabatan)
+         VALUES (?, ?, ?, 'Administrator')
+         ON DUPLICATE KEY UPDATE
+            nama_lengkap = VALUES(nama_lengkap),
+            kata_sandi = VALUES(kata_sandi),
+            jabatan = VALUES(jabatan)`,
+        [process.env.INITIAL_ADMIN_NAME?.trim() || bootstrapUsername, bootstrapUsername,
+          `scrypt$${salt}$${passwordHash.toString('hex')}`]
+      );
+    } else {
+      console.warn('⚠️ INITIAL_ADMIN_USERNAME/PASSWORD belum dikonfigurasi; login API belum dapat digunakan.');
+    }
+    await pool.query('DELETE FROM sesi_tu WHERE expires_at <= NOW()');
     await ensureColumns('backup', [
       ['tipe_backup', 'VARCHAR(50) NULL'],
       ['jam_backup', 'TIME NULL']
@@ -525,7 +559,12 @@ async function initMySQL() {
         (99, 'Siswa Contoh 099', 'DEMO-0099', 'IX B', 'ok'),
         (100, 'Siswa Contoh 100', 'DEMO-0100', 'IX B', 'ok')
       `);
+    }
 
+    // Seed data dokumen sampel jika tabel dokumen masih kosong
+    const [docRows] = await pool.query('SELECT COUNT(*) AS total FROM dokumen');
+    if (docRows[0].total === 0) {
+      console.log('📦 Mengisi sample data dokumen ke MySQL database arsip_siswa...');
       await pool.query(`
         INSERT INTO dokumen (id, siswa_id, nama, kategori, tahun, jenis, status) VALUES
         (1, 1, 'Ijazah - Siswa Contoh 001', 'Ijazah', '2026', 'Fisik + Digital', 'ok'),
@@ -567,13 +606,6 @@ async function initMySQL() {
 
         (30, NULL, 'Surat Undangan Wali Murid 2026', 'Surat masuk/keluar', '2026', 'Fisik + Digital', 'ok'),
         (31, NULL, 'SK Pembina Pramuka SMP Muh 1', 'Organisasi', '2025', 'Fisik', 'warn')
-      `);
-
-      await pool.query(`
-        INSERT INTO log_aktivitas (waktu, teks) VALUES
-        ('09:02 WIB', 'Data contoh: Google Drive tersinkronisasi otomatis'),
-        ('08:40 WIB', 'Data contoh: Laptop sekolah tersinkronisasi otomatis'),
-        ('Kemarin', 'Data contoh: Staf TU memperbarui data 100 siswa per kelas')
       `);
     }
 
@@ -651,10 +683,96 @@ async function initMySQL() {
   } catch (err) {
     console.error('❌ Gagal mengoneksikan MySQL:', err.message);
     console.error('💡 Pastikan MySQL server (XAMPP / MySQL Service) sudah berjalan!');
+    throw err;
   }
 }
 
 // ================= API ENDPOINTS =================
+
+app.post('/api/auth/login', async (req, res) => {
+  const ip = req.ip;
+  const now = Date.now();
+  const attempts = (loginAttempts.get(ip) || []).filter(time => now - time < 15 * 60 * 1000);
+  if (attempts.length >= 8) {
+    loginAttempts.set(ip, attempts);
+    return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi 15 menit kemudian.' });
+  }
+  attempts.push(now);
+  loginAttempts.set(ip, attempts);
+
+  try {
+    const { username, password } = req.body || {};
+    if (typeof username !== 'string' || typeof password !== 'string' || !username.trim() || !password) {
+      return res.status(400).json({ error: 'Username dan kata sandi wajib diisi.' });
+    }
+    const [rows] = await pool.query(
+      'SELECT id_pengguna, nama_lengkap, username, kata_sandi, jabatan FROM pengguna_tu WHERE username = ? LIMIT 1',
+      [username.trim()]
+    );
+    const user = rows[0];
+    const [scheme, salt, expectedHex] = (user?.kata_sandi || '').split('$');
+    let valid = false;
+    if (scheme === 'scrypt' && /^[0-9a-f]{32}$/i.test(salt) && /^[0-9a-f]{128}$/i.test(expectedHex)) {
+      const actual = await scrypt(password, salt, 64);
+      valid = crypto.timingSafeEqual(actual, Buffer.from(expectedHex, 'hex'));
+    }
+    if (!valid) return res.status(401).json({ error: 'Username atau kata sandi salah.' });
+
+    const token = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    await pool.query(
+      'INSERT INTO sesi_tu (token_hash, id_pengguna, expires_at) VALUES (?, ?, ?)',
+      [tokenHash, user.id_pengguna, new Date(Date.now() + SESSION_DURATION_MS)]
+    );
+    loginAttempts.delete(ip);
+    res.json({
+      token,
+      expires_in: SESSION_DURATION_MS / 1000,
+      user: {
+        id_pengguna: user.id_pengguna,
+        nama_lengkap: user.nama_lengkap,
+        username: user.username,
+        jabatan: user.jabatan
+      }
+    });
+  } catch (err) {
+    console.error('Gagal memproses login:', err);
+    res.status(500).json({ error: 'Login gagal karena kesalahan server.' });
+  }
+});
+
+app.use('/api', async (req, res, next) => {
+  if (req.path === '/auth/login') return next();
+  const authorization = req.get('Authorization') || '';
+  const match = authorization.match(/^Bearer ([A-Za-z0-9_-]+)$/);
+  if (!match) return res.status(401).json({ error: 'Silakan login untuk melanjutkan.' });
+
+  const tokenHash = crypto.createHash('sha256').update(match[1]).digest('hex');
+  try {
+    const [rows] = await pool.query(
+      `SELECT p.id_pengguna, p.nama_lengkap, p.username, p.jabatan
+       FROM sesi_tu s JOIN pengguna_tu p ON p.id_pengguna = s.id_pengguna
+       WHERE s.token_hash = ? AND s.expires_at > NOW() LIMIT 1`,
+      [tokenHash]
+    );
+    if (!rows.length) return res.status(401).json({ error: 'Sesi login berakhir. Silakan login kembali.' });
+    req.user = rows[0];
+    req.authTokenHash = tokenHash;
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/auth/logout', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM sesi_tu WHERE token_hash = ?', [req.authTokenHash]);
+    res.json({ message: 'Berhasil keluar.' });
+  } catch (err) {
+    console.error('Gagal mengakhiri sesi:', err);
+    res.status(500).json({ error: 'Gagal mengakhiri sesi.' });
+  }
+});
 
 // GET /api/status — Diagnostik status kesehatan Backend, MySQL, dan Google Drive API
 app.get('/api/status', async (req, res) => {
@@ -1403,7 +1521,16 @@ app.get('/api/dokumen/:id/file', async (req, res) => {
       return;
     }
     if (document.file_url && document.file_url.startsWith('/uploads/')) {
-      return res.redirect(document.file_url);
+      const filename = path.basename(document.file_url.slice('/uploads/'.length));
+      const filePath = path.join(__dirname, 'uploads', filename);
+      if (!filename || !fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File dokumen tidak tersedia' });
+      }
+      const safeName = path.basename(document.file_original_name || filename).replace(/[\r\n"]/g, '_');
+      res.setHeader('Content-Type', document.file_mime_type || 'application/octet-stream');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Disposition', `inline; filename="${safeName}"`);
+      return res.sendFile(filePath);
     }
     res.status(404).json({ error: 'File dokumen tidak tersedia' });
   } catch (err) {

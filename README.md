@@ -13,7 +13,7 @@ Aplikasi Pengelolaan Dokumen Administrasi Siswa terintegrasi dengan Database MyS
    ```sql
    CREATE DATABASE IF NOT EXISTS arsip_siswa;
    ```
-4. Impor struktur tabel & data awal dengan mengimpor file `schema.sql` di phpMyAdmin (terdapat 100 data siswa terdaftar per kelas VII A - IX B), atau biarkan `server.js` membuat tabel & memasukkan data otomatis saat pertama kali dijalankan.
+4. Impor struktur tabel & data awal dengan mengimpor file `schema.sql` di phpMyAdmin (terdapat 100 data siswa contoh total untuk kelas VII A - IX B), atau biarkan `server.js` membuat tabel & memasukkan data otomatis saat pertama kali dijalankan.
 
 Skema mencakup entitas pada ERD pengelolaan arsip serta backup/sinkronisasi. Saat server dijalankan, kolom dan tabel ERD yang belum ada ditambahkan tanpa menghapus kolom lama; data kelas dan kategori dari tabel lama juga dinormalisasi ke tabel relasinya.
 Nama primary key lama (`id`) pada tabel siswa, dokumen, dan log dipertahankan agar endpoint dan data yang sudah ada tetap kompatibel; kolom foreign key dan relasi ERD ditambahkan.
@@ -29,7 +29,7 @@ Buka Terminal / Command Prompt pada folder proyek ini (`c:\Users\ANY\OneDrive\At
 npm install
 ```
 
-### 2. Pengaturan Koneksi Database (`.env`)
+### 2. Pengaturan Koneksi Database dan Login (`.env`)
 Sesuaikan nama database, username, dan password MySQL Anda pada file `.env` (atau buat dari file `.env.example`):
 
 ```env
@@ -39,9 +39,15 @@ DB_PASSWORD=
 DB_NAME=arsip_siswa
 DB_PORT=3306
 PORT=3000
+FRONTEND_ORIGINS=https://anisholikhatin23-ui.github.io,http://localhost:3000,http://127.0.0.1:3000
+INITIAL_ADMIN_USERNAME=staf.tu
+INITIAL_ADMIN_NAME=Administrator TU
+INITIAL_ADMIN_PASSWORD=<kata-sandi-kuat>
 GOOGLE_DRIVE_FOLDER_ID=your_google_drive_folder_id
 GOOGLE_SERVICE_ACCOUNT_FILE=C:\path\to\service-account.json
 ```
+
+Atur `INITIAL_ADMIN_PASSWORD` dengan kata sandi kuat. Saat server berjalan, akun admin di `pengguna_tu` dibuat atau diperbarui dengan hash scrypt; kata sandi tidak disimpan sebagai teks biasa. Endpoint API memerlukan sesi login yang berlaku 8 jam. Token sesi hanya disimpan di memori tab browser, sehingga setelah browser dimuat ulang staf perlu login kembali. Jangan gunakan kembali kata sandi pribadi.
 
 ### 3. Hubungkan folder Google Drive
 1. Aktifkan Google Drive API pada proyek Google Cloud sekolah dan buat service account.
@@ -50,16 +56,27 @@ GOOGLE_SERVICE_ACCOUNT_FILE=C:\path\to\service-account.json
 4. Salin `.env.example` menjadi `.env`, lalu atur ID folder dan lokasi file kunci. Alternatifnya, atur `GOOGLE_SERVICE_ACCOUNT_JSON` sebagai environment variable di server.
 5. Jalankan `npm install`, lalu `npm start`. Backend otomatis menambahkan kolom referensi Drive pada tabel dokumen yang sudah ada.
 
-Unggahan PDF/JPG/PNG (maksimal 5 MB) disimpan di folder Drive tersebut. MySQL menyimpan metadata, ID file Drive, dan tipe file; file dialirkan melalui backend tanpa menjadikan file publik. Jika konfigurasi atau izin Drive belum benar, unggahan akan gagal dengan pesan error.
+Unggahan PDF/JPG/PNG (maksimal 5 MB) disimpan di folder Drive tersebut. MySQL menyimpan metadata, ID file Drive, dan tipe file; file dialirkan melalui backend tanpa menjadikan file publik. Pastikan Google Drive sudah dikonfigurasi sebelum menyimpan dokumen sungguhan.
 
-**Keamanan:** formulir login saat ini hanya tampilan prototipe dan endpoint API belum memiliki autentikasi/otorisasi backend. Gunakan hanya di lingkungan lokal/jaringan tepercaya selama pengembangan. Sebelum dipublikasikan ke internet atau dipakai untuk dokumen siswa sungguhan, autentikasi dan pemeriksaan hak akses backend wajib diterapkan.
+### 4. Deploy online dengan Railway dan GitHub Pages
 
-### 4. Jalankan Server
+GitHub Pages hanya menyajikan frontend statis; ia tidak menjalankan Node.js atau MySQL. Agar perubahan data tersimpan dan dapat dibuka dari beberapa perangkat:
+
+1. Buat service Node.js dari repository ini di Railway, lalu tambahkan service MySQL pada project yang sama.
+2. Isi variabel `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, dan `DB_PORT` pada service Node.js memakai detail koneksi internal dari service MySQL Railway. Jangan memakai host `localhost` untuk database online.
+3. Isi `INITIAL_ADMIN_USERNAME`, `INITIAL_ADMIN_NAME`, `INITIAL_ADMIN_PASSWORD`, dan `FRONTEND_ORIGINS` di Variables service Node.js. Untuk GitHub Pages, origin frontend adalah `https://anisholikhatin23-ui.github.io` (tanpa nama repository dan tanpa garis miring di akhir). Isi rahasia hanya di dashboard Railway, jangan di GitHub atau chat.
+4. Isi `GOOGLE_DRIVE_FOLDER_ID` dan kredensial Google Drive di environment Railway sebelum mengunggah berkas siswa.
+5. Setelah Railway menyediakan domain backend HTTPS, isi konstanta `API_BASE_URL` di `index.html` dengan origin tersebut, misalnya `https://nama-service.up.railway.app`, lalu commit/push perubahan agar GitHub Pages menerbitkan frontend.
+6. Pada deploy pertama, backend membuat tabel dan data contoh otomatis, serta membuat akun admin berdasarkan variabel `INITIAL_ADMIN_*`. Login menggunakan username dan kata sandi yang Anda atur sendiri di Railway.
+
+Jangan memasukkan data siswa sungguhan sebelum langkah-langkah tersebut selesai dan sudah diuji. Penyimpanan lokal browser bukan database bersama dan tidak tersinkron antarperangkat.
+
+### 5. Jalankan Server lokal
 ```bash
 npm start
 ```
 
-Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubung langsung dengan database MySQL **`arsip_siswa`**.
+Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubung langsung dengan database MySQL **`arsip_siswa`**. Buka frontend melalui alamat tersebut, bukan dengan membuka file HTML langsung.
 
 ---
 
@@ -67,7 +84,8 @@ Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubu
 
 | Method | Endpoint | Deskripsi |
 | ------ | -------- | --------- |
-| **GET** | `/api/siswa` | Mengambil data 100 siswa dari DB MySQL (`arsip_siswa.siswa`) |
+| **GET** | `/api/siswa` | Mengambil seluruh data siswa dari DB MySQL (`arsip_siswa.siswa`), termasuk 100 data contoh awal |
+| **POST** | `/api/auth/login` | Memulai sesi staf TU |
 | **POST** | `/api/siswa` | Menyimpan data siswa baru ke DB MySQL |
 | **PUT** | `/api/siswa/:id` | Memperbarui/edit data siswa (nama, nisn, kelas) di DB MySQL |
 | **DELETE** | `/api/siswa/:id` | Menghapus siswa dari DB MySQL |
@@ -91,7 +109,7 @@ Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubu
 
 ## 📁 File Penting Proyek
 
-- [index.html](./index.html) — Frontend UI/UX prototipe pengelolaan dokumen siswa dengan data contoh
+- [index.html](./index.html) — Frontend pengelolaan dokumen siswa; isi `API_BASE_URL` untuk menghubungkannya ke backend online
 - [server.js](./server.js) — Server Backend REST API yang terhubung ke MySQL `arsip_siswa`
 - [schema.sql](./schema.sql) — Struktur database MySQL dan data contoh
 - [.env.example](./.env.example) — Contoh pengaturan koneksi MySQL dan Google Drive

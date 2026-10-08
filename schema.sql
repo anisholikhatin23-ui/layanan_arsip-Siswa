@@ -58,6 +58,16 @@ CREATE TABLE IF NOT EXISTS pengguna_tu (
   nip VARCHAR(50) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS sesi_tu (
+  token_hash CHAR(64) PRIMARY KEY,
+  id_pengguna INT NOT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_sesi_tu_expiration (expires_at),
+  CONSTRAINT fk_sesi_tu_pengguna FOREIGN KEY (id_pengguna)
+    REFERENCES pengguna_tu(id_pengguna) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 3. Tabel Dokumen Administrasi Siswa
 CREATE TABLE IF NOT EXISTS dokumen (
   id_dokumen INT AUTO_INCREMENT PRIMARY KEY,

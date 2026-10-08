@@ -354,11 +354,11 @@
 
     <div class="field">
       <label>Nama Pengguna / Username Staf</label>
-      <input type="text" id="login-user" placeholder="mis. staf.tu atau titis.nurahma" value="staf.tu" />
+      <input type="text" id="login-user" placeholder="mis. staf.tu atau titis.nurahma" autocomplete="username" />
     </div>
     <div class="field">
       <label>Kata Sandi</label>
-      <input type="password" id="login-pass" placeholder="••••••••" value="admin123" />
+      <input type="password" id="login-pass" placeholder="Kata sandi" autocomplete="current-password" />
     </div>
     <button class="btn-primary" id="login-btn">Masuk ke Sistem</button>
     <p class="login-hint">Prototipe Sistem Pengelolaan Dokumen Administrasi Siswa.<br>Akses dibatasi hanya untuk Staf Tata Usaha.</p>
@@ -783,6 +783,7 @@ const KAT_LABEL = { 'Ijazah': 'Ijazah SD/MI', 'Akta Kelahiran': 'Akta Kelahiran'
 const KAT_ICON  = { 'Ijazah': '&#127891;', 'Akta Kelahiran': '&#128196;', 'Kartu Keluarga': '&#128106;', 'Rapor': '&#128216;' };
 const MAX_FILE = 5 * 1024 * 1024;                      // 5 MB
 const ALLOWED = ['application/pdf', 'image/jpeg', 'image/png'];
+const API_BASE_URL = ''; // Isi origin backend Railway, contoh: https://nama-service.up.railway.app
 
 // =====================================================================
 //  STATE APLIKASI
@@ -1105,7 +1106,7 @@ document.getElementById('quick-file').addEventListener('change', e => {
     formData.append('jenis', d.jenis || 'Fisik + Digital');
     formData.append('status', 'ok');
     formData.append('file', f);
-    fetch(isExistingRecord ? `/api/dokumen/${quickTarget.docId}` : '/api/dokumen', {
+    apiFetch(isExistingRecord ? `/api/dokumen/${quickTarget.docId}` : '/api/dokumen', {
       method: isExistingRecord ? 'PUT' : 'POST',
       body: formData
     }).then(async response => {
@@ -1132,23 +1133,42 @@ document.getElementById('quick-file').addEventListener('change', e => {
   renderAll();
 });
 
-function openPreview(docId) {
+let activePreviewUrl = null;
+async function openPreview(docId) {
   const d = documents.find(x => x.id === docId);
   if (!d || !d.file) return;
   const s = d.siswaId ? getSiswa(d.siswaId) : null;
   document.getElementById('preview-title').textContent = docTitle(d) + (s ? ' — ' + s.nama : '');
   const body = document.getElementById('preview-body');
-  if (d.file.type === 'application/pdf') body.innerHTML = `<iframe src="${d.file.url}" title="Preview PDF"></iframe>`;
-  else if (d.file.type.startsWith('image/')) body.innerHTML = `<img src="${d.file.url}" alt="Preview dokumen" />`;
-  else body.innerHTML = '<p class="muted">Pratinjau tidak tersedia untuk tipe file ini.</p>';
-  const a = document.getElementById('preview-download');
-  a.href = d.file.url; a.download = d.file.name;
-  document.getElementById('modal-preview').classList.add('show');
+  try {
+    if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
+    activePreviewUrl = null;
+    let fileUrl = d.file.url;
+    if (isApiConnected) {
+      const response = await apiFetch(fileUrl);
+      if (!response.ok) throw new Error('Gagal mengambil file dari server.');
+      activePreviewUrl = URL.createObjectURL(await response.blob());
+      fileUrl = activePreviewUrl;
+    }
+    if (d.file.type === 'application/pdf') body.innerHTML = `<iframe src="${fileUrl}" title="Preview PDF"></iframe>`;
+    else if (d.file.type.startsWith('image/')) body.innerHTML = `<img src="${fileUrl}" alt="Preview dokumen" />`;
+    else body.innerHTML = '<p class="muted">Pratinjau tidak tersedia untuk tipe file ini.</p>';
+    const a = document.getElementById('preview-download');
+    a.href = fileUrl; a.download = d.file.name;
+    document.getElementById('modal-preview').classList.add('show');
+  } catch (error) {
+    console.error(error);
+    toast(error.message, 'error');
+  }
 }
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('show');
-  if (id === 'modal-preview') document.getElementById('preview-body').innerHTML = '';
+  if (id === 'modal-preview') {
+    document.getElementById('preview-body').innerHTML = '';
+    if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
+    activePreviewUrl = null;
+  }
   if (id === 'modal-berkas') currentBerkasId = null;
 }
 document.addEventListener('keydown', e => {
@@ -1160,22 +1180,52 @@ document.addEventListener('keydown', e => {
 // =====================================================================
 //  LOGIN & NAVIGASI
 // =====================================================================
-document.getElementById('login-btn').addEventListener('click', () => {
+document.getElementById('login-btn').addEventListener('click', async () => {
   const user = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value.trim();
+  const pass = document.getElementById('login-pass').value;
   if (!user || !pass) { toast('Username dan password Staf TU wajib diisi!', 'error'); return; }
-  currentUser = user;
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').classList.add('show');
-  document.getElementById('user-name').textContent = user;
-  document.getElementById('user-av').textContent = user.slice(0, 2).toUpperCase();
-  toast('Selamat datang, Staf TU ' + user);
-  showPage('dashboard');
-  renderAll();
+  const button = document.getElementById('login-btn');
+  button.disabled = true;
+  try {
+    const response = await fetch(apiUrl('/api/auth/login'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Login gagal');
+
+    apiToken = result.token;
+    currentUser = result.user.username;
+    isApiConnected = true;
+    await loadFromApi();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('show');
+    document.getElementById('user-name').textContent = currentUser;
+    document.getElementById('user-av').textContent = currentUser.slice(0, 2).toUpperCase();
+    toast('Selamat datang, Staf TU ' + currentUser);
+    showPage('dashboard');
+    renderAll();
+  } catch (error) {
+    apiToken = null;
+    isApiConnected = false;
+    console.error(error);
+    toast(`Login gagal: ${error.message}`, 'error');
+  } finally {
+    button.disabled = false;
+  }
 });
-document.getElementById('logout-btn').addEventListener('click', () => {
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  try {
+    if (apiToken) await apiFetch('/api/auth/logout', { method: 'DELETE' });
+  } catch (error) {
+    console.error('Gagal mengakhiri sesi API:', error);
+  }
+  apiToken = null;
+  isApiConnected = false;
   document.getElementById('app').classList.remove('show');
   document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
   toast('Berhasil keluar dari sistem');
 });
 
@@ -1254,13 +1304,10 @@ function renderActivity() {
 
 async function fetchNextNomorSurat() {
   if (isApiConnected) {
-    try {
-      const res = await fetch(apiUrl('/api/surat-legalisir/next-number'));
-      if (res.ok) {
-        const data = await res.json();
-        if (data.nomor_surat) return data.nomor_surat;
-      }
-    } catch(e) {}
+    const res = await apiFetch('/api/surat-legalisir/next-number');
+    const data = await res.json();
+    if (!res.ok || !data.nomor_surat) throw new Error(data.error || 'Gagal mengambil nomor surat dari database.');
+    return data.nomor_surat;
   }
   const seq = String((suratLegalisir ? suratLegalisir.length : 0) + 1).padStart(3, '0');
   return `421/${seq}/SMPM01/NB/${new Date().getFullYear()}`;
@@ -1331,7 +1378,7 @@ document.getElementById('legalisir-save').addEventListener('click', async () => 
   if (isApiConnected) {
     saveButton.disabled = true;
     try {
-      const response = await fetch(apiUrl('/api/surat-legalisir'), {
+      const response = await apiFetch('/api/surat-legalisir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_siswa: idSiswa, nomor_surat: nomorSurat, tanggal_cetak: tanggalCetak })
@@ -1527,13 +1574,27 @@ function renderArsip() {
 // =====================================================================
 let isApiConnected = false;
 let isLocalLoaded = false;
+let apiToken = null;
 
 function apiUrl(path) {
   if (!path.startsWith('/')) path = '/' + path;
-  if (window.location.protocol.startsWith('http') && (window.location.port === '' || window.location.port === '3000')) {
+  if (API_BASE_URL) {
+    if (window.location.protocol === 'https:' && !/^https:\/\//i.test(API_BASE_URL)) {
+      throw new Error('Backend wajib memakai HTTPS saat frontend dibuka secara online.');
+    }
+    return API_BASE_URL.replace(/\/+$/, '') + path;
+  }
+  if (['localhost', '127.0.0.1'].includes(window.location.hostname) && (window.location.port === '' || window.location.port === '3000')) {
     return path;
   }
-  return 'http://localhost:3000' + path;
+  throw new Error('URL backend belum diatur. Isi API_BASE_URL dengan URL backend Railway.');
+}
+
+function apiFetch(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  if (apiToken) headers.set('Authorization', `Bearer ${apiToken}`);
+  const url = /^https?:\/\//i.test(path) ? path : apiUrl(path);
+  return fetch(url, { ...options, headers });
 }
 
 function saveToLocal() {
@@ -1567,19 +1628,17 @@ function loadFromLocal() {
 
 async function loadFromApi() {
   try {
-    const res = await fetch(apiUrl('/api/siswa'));
-    if (res.ok) {
-      const dataSiswa = await res.json();
-      if (Array.isArray(dataSiswa) && dataSiswa.length > 0) {
-        isApiConnected = true;
-        siswa = dataSiswa.map(s => ({ id: s.id, nama: s.nama, nisn: s.nisn, kelas: s.kelas }));
-      }
-    }
-    const docRes = await fetch(apiUrl('/api/dokumen'));
-    if (docRes.ok) {
-      const dataDocs = await docRes.json();
-      if (Array.isArray(dataDocs)) {
-        documents = dataDocs.map(d => ({
+    const res = await apiFetch('/api/siswa');
+    if (!res.ok) throw new Error(`API siswa merespons ${res.status}`);
+    const dataSiswa = await res.json();
+    if (!Array.isArray(dataSiswa)) throw new Error('Respons API siswa tidak valid');
+    isApiConnected = true;
+    siswa = dataSiswa.map(s => ({ id: s.id, nama: s.nama, nisn: s.nisn, kelas: s.kelas }));
+    const docRes = await apiFetch('/api/dokumen');
+    if (!docRes.ok) throw new Error('Gagal memuat dokumen dari database.');
+    const dataDocs = await docRes.json();
+    if (Array.isArray(dataDocs)) {
+      documents = dataDocs.map(d => ({
           id: d.id,
           siswaId: d.siswa_id,
           kategori: d.kategori,
@@ -1591,25 +1650,21 @@ async function loadFromApi() {
             name: d.file_original_name || d.nama,
             size: 250000,
             type: d.file_mime_type || (d.file_url && d.file_url.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
-            url: d.drive_file_id ? apiUrl(`/api/dokumen/${d.id}/file`) : d.file_url
+            url: apiUrl(`/api/dokumen/${d.id}/file`)
           } : null
-        }));
-      }
+      }));
     }
-    const logRes = await fetch(apiUrl('/api/backup/logs'));
-    if (logRes.ok) {
-      const logs = await logRes.json();
-      if (Array.isArray(logs) && logs.length > 0) {
-        activity = logs.map(l => ({ t: l.waktu, text: l.teks }));
-      }
-    }
-    const legalisirRes = await fetch(apiUrl('/api/surat-legalisir'));
-    if (legalisirRes.ok) {
-      const dataLegalisir = await legalisirRes.json();
-      if (Array.isArray(dataLegalisir)) suratLegalisir = dataLegalisir;
-    }
-    const backupRes = await fetch(apiUrl('/api/backup'));
-    if (backupRes.ok) {
+    const logRes = await apiFetch('/api/backup/logs');
+    if (!logRes.ok) throw new Error('Gagal memuat log aktivitas dari database.');
+    const logs = await logRes.json();
+    if (Array.isArray(logs)) activity = logs.map(l => ({ t: l.waktu, text: l.teks }));
+    const legalisirRes = await apiFetch('/api/surat-legalisir');
+    if (!legalisirRes.ok) throw new Error('Gagal memuat data legalisir dari database.');
+    const dataLegalisir = await legalisirRes.json();
+    if (Array.isArray(dataLegalisir)) suratLegalisir = dataLegalisir;
+    const backupRes = await apiFetch('/api/backup');
+    if (!backupRes.ok) throw new Error('Gagal memuat status backup dari database.');
+    {
       const backups = await backupRes.json();
       const latestBackup = Array.isArray(backups) ? backups[0] : null;
       const dashboardBadge = document.getElementById('stat-backup');
@@ -1618,8 +1673,9 @@ async function loadFromApi() {
         dashboardBadge.className = 'badge ' + (isPending ? 'warn' : 'ok');
         dashboardBadge.textContent = isPending ? 'Backup menunggu' : latestBackup.status_backup;
 
-        const detailRes = await fetch(apiUrl(`/api/backup/${latestBackup.id_backup}/detail-sinkron`));
-        if (detailRes.ok) {
+        const detailRes = await apiFetch(`/api/backup/${latestBackup.id_backup}/detail-sinkron`);
+        if (!detailRes.ok) throw new Error('Gagal memuat status sinkronisasi backup.');
+        {
           const details = await detailRes.json();
           const detailByName = new Map(details.map(detail => [detail.nama_titik, detail]));
           ['Laptop Sekolah', 'Laptop Admin TU', 'Google Drive Sekolah'].forEach((name, index) => {
@@ -1642,9 +1698,7 @@ async function loadFromApi() {
     }
     renderAll();
   } catch(err) {
-    isApiConnected = false;
-    loadFromLocal();
-    renderAll();
+    throw err;
   }
 }
 
@@ -1654,7 +1708,7 @@ async function resolveDoc(id) {
   d.status = 'ok';
   if (isApiConnected) {
     try {
-      await fetch(apiUrl('/api/dokumen/' + id), {
+      await apiFetch('/api/dokumen/' + id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nama: docTitle(d), kategori: d.kategori, tahun: d.tahun, jenis: d.jenis, status: 'ok' })
@@ -1676,7 +1730,7 @@ async function deleteDoc(id) {
 
   if (isApiConnected) {
     try {
-      const response = await fetch(apiUrl('/api/dokumen/' + id), { method: 'DELETE' });
+      const response = await apiFetch('/api/dokumen/' + id, { method: 'DELETE' });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Gagal menghapus dokumen');
       toast('Dokumen dihapus dari MySQL');
@@ -1853,7 +1907,7 @@ document.getElementById('doc-save').addEventListener('click', async () => {
       const url = editingDocId !== null ? apiUrl(`/api/dokumen/${editingDocId}`) : apiUrl('/api/dokumen');
       const method = editingDocId !== null ? 'PUT' : 'POST';
 
-      const res = await fetch(url, { method, body: formData });
+      const res = await apiFetch(url, { method, body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan dokumen');
       if (data.id) {
@@ -1916,12 +1970,14 @@ document.getElementById('siswa-save').addEventListener('click', async () => {
       const url = editingSiswaId !== null ? apiUrl(`/api/siswa/${editingSiswaId}`) : apiUrl('/api/siswa');
       const method = editingSiswaId !== null ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nama, nisn, kelas })
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan data siswa ke MySQL');
+      if (!data.id) throw new Error('Server tidak mengonfirmasi penyimpanan data siswa');
       if (data.id) {
         toast(editingSiswaId !== null ? 'Data siswa berhasil diperbarui di MySQL!' : 'Data siswa berhasil disimpan ke MySQL!');
         await loadFromApi();
@@ -1929,20 +1985,24 @@ document.getElementById('siswa-save').addEventListener('click', async () => {
         if (editingSiswaId === null) openBerkas(data.id);
         return;
       }
-    } catch(err) { console.error(err); }
+    } catch(err) {
+      console.error(err);
+      toast(`Gagal menyimpan ke MySQL: ${err.message}`, 'error');
+      return;
+    }
   }
 
   if (editingSiswaId !== null) {
     Object.assign(getSiswa(editingSiswaId), { nama, nisn, kelas });
     logAct(`Data siswa "${nama}" diperbarui`);
-    toast('Data siswa berhasil diperbarui');
+    toast('Data siswa diperbarui di penyimpanan lokal browser — tidak masuk MySQL', 'error');
     closeModal('modal-siswa');
     renderAll();
   } else {
     const baru = { id: uid(), nama, nisn, kelas };
     siswa.push(baru);
     logAct(`Data siswa baru "${nama}" ditambahkan ke kelas ${kelas}`);
-    toast('Data siswa ditambahkan — silakan unggah dokumennya');
+    toast('Data siswa hanya ditambahkan di penyimpanan lokal browser — tidak masuk MySQL', 'error');
     closeModal('modal-siswa');
     renderAll();
     openBerkas(baru.id);
@@ -1957,7 +2017,7 @@ async function deleteSiswa(id) {
 
   if (isApiConnected) {
     try {
-      await fetch(apiUrl('/api/siswa/' + s.id), { method: 'DELETE' });
+      await apiFetch('/api/siswa/' + s.id, { method: 'DELETE' });
       toast(`Data siswa "${s.nama}" berhasil dihapus dari MySQL`);
       await loadFromApi();
       closeModal('modal-siswa');
@@ -2104,7 +2164,7 @@ document.getElementById('btn-trigger-backup').addEventListener('click', async ()
   btn.innerHTML = '&#8987; Mencatat Permintaan...';
   try {
     if (isApiConnected) {
-      const res = await fetch(apiUrl('/api/backup/trigger'), { method: 'POST' });
+      const res = await apiFetch('/api/backup/trigger', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal mencatat permintaan backup');
       await loadFromApi();
@@ -2162,7 +2222,6 @@ document.getElementById('legalisir-tanggal').value = `${today.getFullYear()}-${S
 
 loadFromLocal();
 renderAll();
-loadFromApi();
 </script>
 </body>
 </html>
