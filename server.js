@@ -400,13 +400,61 @@ async function initMySQL() {
         id_titik INT NOT NULL,
         waktu_sinkron DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         status_sinkron VARCHAR(30) NOT NULL DEFAULT 'menunggu'
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+      `CREATE TABLE IF NOT EXISTS detail_backup (
+        id_detail_backup INT AUTO_INCREMENT PRIMARY KEY,
+        id_backup INT NOT NULL,
+        nama_tabel VARCHAR(100) NOT NULL,
+        jumlah_record INT NULL,
+        status_detail VARCHAR(30) NOT NULL DEFAULT 'menunggu'
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+      `CREATE TABLE IF NOT EXISTS pemulihan_data (
+        id_pemulihan INT AUTO_INCREMENT PRIMARY KEY,
+        id_backup INT NULL,
+        id_pengguna INT NULL,
+        ruang_lingkup VARCHAR(100) NULL,
+        waktu_mulai DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        waktu_selesai DATETIME NULL,
+        status_pemulihan VARCHAR(30) NOT NULL DEFAULT 'menunggu',
+        alasan TEXT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+      `CREATE TABLE IF NOT EXISTS antrian_backup (
+        id_antrian INT AUTO_INCREMENT PRIMARY KEY,
+        id_log INT NOT NULL UNIQUE,
+        id_backup INT NULL,
+        waktu_masuk DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        waktu_diproses DATETIME NULL,
+        status_antrian VARCHAR(30) NOT NULL DEFAULT 'menunggu',
+        jumlah_percobaan INT NOT NULL DEFAULT 0
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
     ]) {
       await pool.query(statement);
     }
 
     await ensureColumns('siswa', [
-      ['id_kelas', 'INT NULL']
+      ['id_kelas', 'INT NULL'],
+      ['username', 'VARCHAR(100) NULL']
+    ]);
+    const [studentUsernameIndexes] = await pool.query(
+      `SELECT INDEX_NAME FROM information_schema.STATISTICS
+       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'siswa' AND COLUMN_NAME = 'username' AND NON_UNIQUE = 0`,
+      [DB_NAME]
+    );
+    if (!studentUsernameIndexes.length) {
+      await pool.query('ALTER TABLE siswa ADD UNIQUE INDEX uq_siswa_username (username)');
+    }
+    await ensureColumns('jadwal_backup', [
+      ['nama_jadwal', 'VARCHAR(100) NULL'],
+      ['tipe_backup', 'VARCHAR(50) NULL'],
+      ['ruang_lingkup', 'VARCHAR(100) NULL'],
+      ['hari', 'VARCHAR(20) NULL'],
+      ['masa_simpan_hari', 'INT NULL']
+    ]);
+    await ensureColumns('titik_penyimpanan', [
+      ['status_titik', "VARCHAR(30) NOT NULL DEFAULT 'aktif'"]
+    ]);
+    await ensureColumns('detail_sinkron', [
+      ['keterangan', 'TEXT NULL']
     ]);
     await ensureColumns('dokumen', [
       ['id', 'INT NULL UNIQUE'],
@@ -430,11 +478,17 @@ async function initMySQL() {
       ['id_pengguna', 'INT NULL'],
       ['waktu_aktivitas', 'DATETIME NULL'],
       ['jenis_aktivitas', 'VARCHAR(100) NULL'],
-      ['keterangan', 'TEXT NULL']
+      ['keterangan', 'TEXT NULL'],
+      ['id_siswa', 'INT NULL'],
+      ['nama_tabel', 'VARCHAR(100) NULL'],
+      ['id_data', 'INT NULL'],
+      ['alamat_ip', 'VARCHAR(45) NULL']
     ]);
     await ensureColumns('pengguna_tu', [
       ['kata_sandi', 'VARCHAR(255) NULL'],
-      ['nip', 'VARCHAR(50) NULL']
+      ['nip', 'VARCHAR(50) NULL'],
+      ['role', 'VARCHAR(30) NULL'],
+      ['status_akun', "VARCHAR(30) NOT NULL DEFAULT 'aktif'"]
     ]);
     const bootstrapUsername = process.env.INITIAL_ADMIN_USERNAME?.trim();
     const bootstrapPassword = process.env.INITIAL_ADMIN_PASSWORD;
@@ -455,7 +509,15 @@ async function initMySQL() {
     await pool.query('DELETE FROM sesi_tu WHERE expires_at <= NOW()');
     await ensureColumns('backup', [
       ['tipe_backup', 'VARCHAR(50) NULL'],
-      ['jam_backup', 'TIME NULL']
+      ['jam_backup', 'TIME NULL'],
+      ['pemicu', 'VARCHAR(50) NULL'],
+      ['ruang_lingkup', 'VARCHAR(100) NULL'],
+      ['waktu_selesai', 'DATETIME NULL'],
+      ['ukuran_file', 'BIGINT NULL'],
+      ['lokasi_file', 'VARCHAR(255) NULL'],
+      ['checksum', 'VARCHAR(128) NULL'],
+      ['tanggal_kadaluarsa', 'DATETIME NULL'],
+      ['keterangan', 'TEXT NULL']
     ]);
 
     const [initialLogColumns] = await pool.query('SHOW COLUMNS FROM log_aktivitas');
@@ -503,6 +565,12 @@ async function initMySQL() {
     await ensureForeignKey('backup', 'fk_backup_pengguna', 'id_pengguna', 'pengguna_tu', 'id_pengguna', 'SET NULL');
     await ensureForeignKey('detail_sinkron', 'fk_sinkron_backup', 'id_backup', 'backup', 'id_backup', 'CASCADE');
     await ensureForeignKey('detail_sinkron', 'fk_sinkron_titik', 'id_titik', 'titik_penyimpanan', 'id_titik', 'RESTRICT');
+    await ensureForeignKey('log_aktivitas', 'fk_log_siswa', 'id_siswa', 'siswa', 'id_siswa', 'SET NULL');
+    await ensureForeignKey('detail_backup', 'fk_detail_backup_backup', 'id_backup', 'backup', 'id_backup', 'CASCADE');
+    await ensureForeignKey('pemulihan_data', 'fk_pemulihan_backup', 'id_backup', 'backup', 'id_backup', 'SET NULL');
+    await ensureForeignKey('pemulihan_data', 'fk_pemulihan_pengguna', 'id_pengguna', 'pengguna_tu', 'id_pengguna', 'SET NULL');
+    await ensureForeignKey('antrian_backup', 'fk_antrian_log', 'id_log', 'log_aktivitas', 'id_log', 'CASCADE');
+    await ensureForeignKey('antrian_backup', 'fk_antrian_backup', 'id_backup', 'backup', 'id_backup', 'SET NULL');
 
     // Insert the canonical roster before seeding documents that refer to students.
     await syncSeededStudents(true);
