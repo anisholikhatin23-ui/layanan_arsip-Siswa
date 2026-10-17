@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS siswa (
   id INT NULL UNIQUE,
   nama VARCHAR(255) NOT NULL,
   nama_lengkap VARCHAR(255) NULL,
+  username VARCHAR(100) NULL UNIQUE,
   nisn VARCHAR(50) UNIQUE NOT NULL,
   nis VARCHAR(50) NULL,
   nama_siswa VARCHAR(255) NULL,
@@ -55,7 +56,9 @@ CREATE TABLE IF NOT EXISTS pengguna_tu (
   username VARCHAR(100) NOT NULL UNIQUE,
   kata_sandi VARCHAR(255) NULL,
   jabatan VARCHAR(100) NULL,
-  nip VARCHAR(50) NULL
+  nip VARCHAR(50) NULL,
+  role VARCHAR(30) NULL,
+  status_akun VARCHAR(30) NOT NULL DEFAULT 'aktif'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS sesi_tu (
@@ -108,7 +111,12 @@ CREATE TABLE IF NOT EXISTS log_aktivitas (
   waktu_aktivitas DATETIME NULL,
   jenis_aktivitas VARCHAR(100) NULL,
   keterangan TEXT NULL,
+  id_siswa INT NULL,
+  nama_tabel VARCHAR(100) NULL,
+  id_data INT NULL,
+  alamat_ip VARCHAR(45) NULL,
   FOREIGN KEY (id_pengguna) REFERENCES pengguna_tu(id_pengguna) ON DELETE SET NULL,
+  FOREIGN KEY (id_siswa) REFERENCES siswa(id_siswa) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -127,7 +135,12 @@ CREATE TABLE IF NOT EXISTS jadwal_backup (
   id_jadwal INT AUTO_INCREMENT PRIMARY KEY,
   jam_backup TIME NOT NULL,
   frekuensi VARCHAR(50) NOT NULL,
-  status_jadwal VARCHAR(30) NOT NULL DEFAULT 'aktif'
+  status_jadwal VARCHAR(30) NOT NULL DEFAULT 'aktif',
+  nama_jadwal VARCHAR(100) NULL,
+  tipe_backup VARCHAR(50) NULL,
+  ruang_lingkup VARCHAR(100) NULL,
+  hari VARCHAR(20) NULL,
+  masa_simpan_hari INT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS backup (
@@ -138,6 +151,14 @@ CREATE TABLE IF NOT EXISTS backup (
   tipe_backup VARCHAR(50) NOT NULL,
   waktu_mulai DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   status_backup VARCHAR(30) NOT NULL DEFAULT 'menunggu',
+  pemicu VARCHAR(50) NULL,
+  ruang_lingkup VARCHAR(100) NULL,
+  waktu_selesai DATETIME NULL,
+  ukuran_file BIGINT NULL,
+  lokasi_file VARCHAR(255) NULL,
+  checksum VARCHAR(128) NULL,
+  tanggal_kadaluarsa DATETIME NULL,
+  keterangan TEXT NULL,
   FOREIGN KEY (id_jadwal) REFERENCES jadwal_backup(id_jadwal) ON DELETE SET NULL,
   FOREIGN KEY (id_pengguna) REFERENCES pengguna_tu(id_pengguna) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -146,7 +167,8 @@ CREATE TABLE IF NOT EXISTS titik_penyimpanan (
   id_titik INT AUTO_INCREMENT PRIMARY KEY,
   nama_titik VARCHAR(100) NOT NULL UNIQUE,
   jenis_penyimpanan VARCHAR(50) NOT NULL,
-  lokasi VARCHAR(255) NOT NULL
+  lokasi VARCHAR(255) NOT NULL,
+  status_titik VARCHAR(30) NOT NULL DEFAULT 'aktif'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS detail_sinkron (
@@ -155,8 +177,43 @@ CREATE TABLE IF NOT EXISTS detail_sinkron (
   id_titik INT NOT NULL,
   waktu_sinkron DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   status_sinkron VARCHAR(30) NOT NULL DEFAULT 'menunggu',
+  keterangan TEXT NULL,
   FOREIGN KEY (id_backup) REFERENCES backup(id_backup) ON DELETE CASCADE,
   FOREIGN KEY (id_titik) REFERENCES titik_penyimpanan(id_titik) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS detail_backup (
+  id_detail_backup INT AUTO_INCREMENT PRIMARY KEY,
+  id_backup INT NOT NULL,
+  nama_tabel VARCHAR(100) NOT NULL,
+  jumlah_record INT NULL,
+  status_detail VARCHAR(30) NOT NULL DEFAULT 'menunggu',
+  FOREIGN KEY (id_backup) REFERENCES backup(id_backup) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS pemulihan_data (
+  id_pemulihan INT AUTO_INCREMENT PRIMARY KEY,
+  id_backup INT NULL,
+  id_pengguna INT NULL,
+  ruang_lingkup VARCHAR(100) NULL,
+  waktu_mulai DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  waktu_selesai DATETIME NULL,
+  status_pemulihan VARCHAR(30) NOT NULL DEFAULT 'menunggu',
+  alasan TEXT NULL,
+  FOREIGN KEY (id_backup) REFERENCES backup(id_backup) ON DELETE SET NULL,
+  FOREIGN KEY (id_pengguna) REFERENCES pengguna_tu(id_pengguna) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS antrian_backup (
+  id_antrian INT AUTO_INCREMENT PRIMARY KEY,
+  id_log INT NOT NULL UNIQUE,
+  id_backup INT NULL,
+  waktu_masuk DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  waktu_diproses DATETIME NULL,
+  status_antrian VARCHAR(30) NOT NULL DEFAULT 'menunggu',
+  jumlah_percobaan INT NOT NULL DEFAULT 0,
+  FOREIGN KEY (id_log) REFERENCES log_aktivitas(id_log) ON DELETE CASCADE,
+  FOREIGN KEY (id_backup) REFERENCES backup(id_backup) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =========================================================
