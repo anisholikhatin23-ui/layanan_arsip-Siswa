@@ -2112,7 +2112,9 @@ document.getElementById('login-btn').addEventListener('click', async () => {
       (user === 'guru' && pass === 'guru123') ||
       (user === 'siswa' && pass === 'siswa123')
     );
-    if (isOfflineDemo && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('belum diatur') || error.message.includes('kesalahan server') || !navigator.onLine)) {
+    const isLocalDemoEnvironment = window.location.protocol === 'file:'
+      || ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (isLocalDemoEnvironment && isOfflineDemo && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('belum diatur') || error.message.includes('kesalahan server') || !navigator.onLine)) {
       apiToken = null;
       isApiConnected = false;
       currentUser = user;
