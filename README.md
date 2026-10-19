@@ -84,7 +84,7 @@ Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubu
 
 | Method | Endpoint | Deskripsi |
 | ------ | -------- | --------- |
-| **GET** | `/api/siswa` | Mengambil seluruh data siswa dari DB MySQL (`arsip_siswa.siswa`), termasuk daftar 100 siswa per kelas |
+| **GET** | `/api/siswa` | Mengambil semua data siswa yang tersimpan di DB MySQL (`arsip_siswa.siswa`), termasuk data yang sudah ada dan data roster |
 | **POST** | `/api/auth/login` | Memulai sesi staf TU |
 | **POST** | `/api/siswa` | Menyimpan data siswa baru ke DB MySQL |
 | **PUT** | `/api/siswa/:id` | Memperbarui/edit data siswa (nama, nisn, kelas) di DB MySQL |
@@ -96,7 +96,6 @@ Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubu
 | **DELETE** | `/api/dokumen/:id` | Menghapus metadata dan file Drive terkait |
 | **GET** | `/api/backup/logs` | Mengambil log aktivitas dari MySQL (`arsip_siswa.log_aktivitas`) |
 | **GET** | `/api/kelas`, `/api/kategori-dokumen`, `/api/pengguna-tu` | Mengambil data referensi ERD (tanpa mengembalikan kata sandi pengguna) |
-| **GET, POST** | `/api/surat-legalisir` | Melihat dan mencatat surat legalisir |
 | **GET, POST, PUT** | `/api/backup/jadwal` | Membaca dan mengelola jadwal backup |
 | **GET, POST** | `/api/titik-penyimpanan` | Membaca dan menambah titik penyimpanan |
 | **GET** | `/api/backup` | Mengambil catatan permintaan backup |
