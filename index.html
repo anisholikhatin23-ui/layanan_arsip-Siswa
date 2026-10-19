@@ -2201,9 +2201,13 @@ document.querySelectorAll('.menu-card').forEach(card => {
 //  RENDER: DASBOR
 // =====================================================================
 function renderDashboard() {
-  document.getElementById('stat-docs').textContent = documents.length;
+  const dashboardStats = isApiConnected ? apiDashboardStats : null;
+  const localRaporCount = Object.keys(raporStore).length;
+  document.getElementById('stat-docs').textContent = dashboardStats ? dashboardStats.documents : documents.length;
   document.getElementById('stat-pending').textContent = documents.filter(d => d.status !== 'ok').length;
-  document.getElementById('stat-siswa').textContent = siswa.length;
+  document.getElementById('stat-profil').textContent = dashboardStats ? dashboardStats.profiles : Object.keys(profilData).length;
+  document.getElementById('stat-siswa').textContent = dashboardStats ? dashboardStats.students : siswa.length;
+  document.getElementById('stat-rapor').textContent = dashboardStats ? dashboardStats.rapor + dashboardStats.nilai : localRaporCount;
 
   const list = kelasList();
   const groups = {};
@@ -2617,6 +2621,7 @@ function renderRaporPage() {
 let isApiConnected = false;
 let isLocalLoaded = false;
 let apiToken = null;
+let apiDashboardStats = null;
 
 function apiUrl(path) {
   if (!path.startsWith('/')) path = '/' + path;
@@ -2757,6 +2762,17 @@ async function loadFromApi() {
         } : null
       }));
     }
+    const statusRes = await apiFetch('/api/status');
+    if (!statusRes.ok) throw new Error('Gagal memuat ringkasan data dari database.');
+    const status = await statusRes.json();
+    if (!status.mysql || !status.mysql.connected) throw new Error('Database MySQL backend tidak terhubung.');
+    apiDashboardStats = {
+      students: Number(status.mysql.siswa_count) || 0,
+      documents: Number(status.mysql.dokumen_count) || 0,
+      profiles: Number(status.mysql.profil_count) || 0,
+      rapor: Number(status.mysql.rapor_count) || 0,
+      nilai: Number(status.mysql.nilai_count) || 0
+    };
     const logRes = await apiFetch('/api/backup/logs');
     if (!logRes.ok) throw new Error('Gagal memuat log aktivitas dari database.');
     const logs = await logRes.json();

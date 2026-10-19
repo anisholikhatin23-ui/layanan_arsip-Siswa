@@ -953,12 +953,22 @@ app.get('/api/status', async (req, res) => {
 
   if (pool) {
     try {
-      const [rows] = await pool.query('SELECT DATABASE() AS db, (SELECT COUNT(*) FROM siswa) AS siswa_count, (SELECT COUNT(*) FROM dokumen) AS doc_count');
+      const [rows] = await pool.query(`
+        SELECT DATABASE() AS db,
+          (SELECT COUNT(*) FROM siswa) AS siswa_count,
+          (SELECT COUNT(*) FROM dokumen) AS doc_count,
+          (SELECT COUNT(*) FROM profil_siswa) AS profil_count,
+          (SELECT COUNT(*) FROM rapor) AS rapor_count,
+          (SELECT COUNT(*) FROM nilai) AS nilai_count
+      `);
       status.mysql = {
         connected: true,
         database: rows[0].db,
         siswa_count: Number(rows[0].siswa_count),
-        dokumen_count: Number(rows[0].doc_count)
+        dokumen_count: Number(rows[0].doc_count),
+        profil_count: Number(rows[0].profil_count),
+        rapor_count: Number(rows[0].rapor_count),
+        nilai_count: Number(rows[0].nilai_count)
       };
     } catch (err) {
       status.mysql = { connected: false, error: err.message };

@@ -84,6 +84,7 @@ Server backend REST API akan berjalan di **`http://localhost:3000`** dan terhubu
 
 | Method | Endpoint | Deskripsi |
 | ------ | -------- | --------- |
+| **GET** | `/api/status` | Status koneksi MySQL dan jumlah siswa, dokumen, profil, rapor, serta nilai |
 | **GET** | `/api/siswa` | Mengambil semua data siswa yang tersimpan di DB MySQL (`arsip_siswa.siswa`), termasuk data yang sudah ada dan data roster |
 | **POST** | `/api/auth/login` | Memulai sesi staf TU |
 | **POST** | `/api/siswa` | Menyimpan data siswa baru ke DB MySQL |
